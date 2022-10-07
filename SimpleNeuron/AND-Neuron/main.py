@@ -2,15 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
 weightsMap = [
-    [[0.5, 0.2]]
+    [[0.5, 0.2], [0.1, 0.6]],
+    [[-0.2, 0.4]]
 ]
 
-inputsMap = [1, 1]
-
-memory = []
-
+biasMap = [
+    [],
+    [0.5]
+]
 
 
 def activation_step(s):
@@ -37,8 +37,17 @@ def activation_sigmoid(s):
     return np.exp(s) / (1 + np.exp(s))
 
 
+def neuron(weights, bias, inputs):
+    
+    # inputs * weights
+    s = bias + 0
+    for w, i in zip(weights, inputs):
+        s += (w * i)
 
-def neuron(weights, inputs):
+    # activation function
+    return activation_relu(s)
+
+def bit_neuron(weights, inputs):
 
     # inputs AND weights
     s = 0
@@ -50,21 +59,45 @@ def neuron(weights, inputs):
     return activation_relu(s)
 
 
-def main():
-    memory.append(inputsMap)
+def network(inputs):
+    memory = [inputs]
 
-    print("Inputs: ", memory[0])
-
-    # itterate through layers
     for l in range(0, len(weightsMap)):
         memory.append([])
 
         # itterate through neuron in layer
         for n in range(0, len(weightsMap[l])):
-            memory[l + 1].append(neuron(weightsMap[l][n], memory[l]))
+            if l == 0:
+                s = bit_neuron(weightsMap[l][n], memory[l])
+            else:
+                s = neuron(weightsMap[l][n], biasMap[l][n], memory[l])
+            memory[l + 1].append(s)
+
+    return memory
+
+def print_memory(memory):
+
+    print("Network State")
+    for l in memory:
+        print(l)
 
 
-    print("Outputs: ", memory[-1])
+
+def main():
+
+    inputs = [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+    ]
+
+    for i in inputs:
+        out = network(i)
+        print_memory(out)
+
+    
+
 
 
 if __name__ == "__main__":
