@@ -49,8 +49,8 @@ for i in inputs:
     res = model(dat)
     
     print("\nTest {}".format(i))
-    print("Input ", dat)
-    print("Output ", res)
+    print("Input ", dat.numpy()[0])
+    print("Output ", res.numpy()[0])
 
 
 # print model summary
