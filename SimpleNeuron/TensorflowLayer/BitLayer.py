@@ -4,6 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
+# Bit Neuron Perceptron
 class BitNeurons(layers.Layer):
 
     def __init__(self, num_outputs):
@@ -15,6 +16,4 @@ class BitNeurons(layers.Layer):
         self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
 
     def call(self, inputs):
-        print("Inputs ", inputs)
-        print("Kernel ", self.kernel)
         return tf.matmul(inputs, self.kernel)
