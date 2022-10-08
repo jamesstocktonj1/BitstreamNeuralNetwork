@@ -20,34 +20,37 @@ x_test = x_test.reshape(10000, 784)
 
 # results arrays
 data_range = 25
+thresholds = list(t / data_range for t in range(data_range))
+
 loss_data = []
 accuracy_data = []
 
 
 # threshold test array
-for t in range(data_range):
-    t = t / data_range
+for t in thresholds:
+
+    print("\nTesting with Threshold {}".format(t))
 
     # round any values greater than 0.0 to be equal to 1.0 (bit input)
-    x_train = np.ceil(x_train - t)
-    x_test = np.ceil(x_test - t)
+    x_temp_train = np.ceil(x_train - t)
+    x_temp_test = np.ceil(x_test - t)
 
     # create model
     model = BitModel()
 
     # train model
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=3)
+    model.fit(x_temp_train, y_train, epochs=3)
 
     # evaluate model
-    val_loss, val_acc = model.evaluate(x_test, y_test)
+    val_loss, val_acc = model.evaluate(x_temp_test, y_test)
     print("Loss: {}\nAccuracy: {}".format(val_loss, val_acc))
 
     loss_data.append(val_loss)
     accuracy_data.append(val_acc)
 
     # save image
-    plt.imshow(x_test[0].reshape(28, 28), cmap=plt.cm.binary)
+    plt.imshow(x_temp_test[0].reshape(28, 28), cmap=plt.cm.binary)
     plt.savefig("data/threshold_{}.png".format(t))
 
 
@@ -60,4 +63,7 @@ fig2 = plt.subplot(2, 1, 2)
 fig2.set_title("Accuracy / Threshold")
 fig2.plot(accuracy_data)
 
-plt.show()
+plt.title("Threshold Analysis")
+
+plt.savefig("data/threshold_analysis.png")
+#plt.show()
