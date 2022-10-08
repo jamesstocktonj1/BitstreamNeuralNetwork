@@ -1,16 +1,15 @@
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers, Model
 import numpy as np
 import matplotlib.pyplot as plt
 
-from BitLayer import BitNeurons
+from BitModel import BitModel
 
 
 # load dataset
 mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
+# normalize data
 x_train = tf.keras.utils.normalize(x_train, axis=1)
 x_test = tf.keras.utils.normalize(x_test, axis=1)
 
@@ -18,48 +17,47 @@ x_test = tf.keras.utils.normalize(x_test, axis=1)
 x_train = x_train.reshape(60000, 784)
 x_test = x_test.reshape(10000, 784)
 
-# round any values greater than 0.0 to be equal to 1.0 (bit input)
-round_threshold = 0.3
-x_train = np.ceil(x_train - round_threshold)
-x_test = np.ceil(x_test - round_threshold)
+
+# results arrays
+data_range = 25
+loss_data = []
+accuracy_data = []
 
 
-# create model
-class BitModel(Model):
+# threshold test array
+for t in range(data_range):
+    t = t / data_range
 
-    def __init__(self):
-        super(BitModel, self).__init__()
+    # round any values greater than 0.0 to be equal to 1.0 (bit input)
+    x_train = np.ceil(x_train - t)
+    x_test = np.ceil(x_test - t)
 
-        self.input_layer = BitNeurons(128)
-        self.dense1 = layers.Dense(128, activation=tf.nn.relu)
+    # create model
+    model = BitModel()
 
-        self.softmax = layers.Dense(10, activation=tf.nn.softmax)
+    # train model
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.fit(x_train, y_train, epochs=3)
 
-    def call(self, x, is_training=False):
-        x = self.input_layer(x)
+    # evaluate model
+    val_loss, val_acc = model.evaluate(x_test, y_test)
+    print("Loss: {}\nAccuracy: {}".format(val_loss, val_acc))
 
-        x = self.dense1(x)
+    loss_data.append(val_loss)
+    accuracy_data.append(val_acc)
 
-        if not is_training:
-            x = self.softmax(x)
+    # save image
+    plt.imshow(x_test[0].reshape(28, 28), cmap=plt.cm.binary)
+    plt.savefig("data/threshold_{}.png".format(t))
 
-        return x
 
+# plot data / threshold graphs
+fig1 = plt.subplot(2, 1, 1)
+fig1.set_title("Loss / Threshold")
+fig1.plot(loss_data)
 
-model = BitModel()
+fig2 = plt.subplot(2, 1, 2)
+fig2.set_title("Accuracy / Threshold")
+fig2.plot(accuracy_data)
 
-# train model
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.fit(x_train, y_train, epochs=3)
-
-# evaluate model
-val_loss, val_acc = model.evaluate(x_test, y_test)
-print("Loss: {}\nAccuracy: {}".format(val_loss, val_acc))
-
-# evaluate prediction
-predictions = model.predict(x_test)
-
-print("Prediction: {}".format(np.argmax(predictions[0])))
-plt.imshow(x_test[0].reshape(28, 28), cmap=plt.cm.binary)
-plt.savefig('main.png')
-#plt.show()
+plt.show()
