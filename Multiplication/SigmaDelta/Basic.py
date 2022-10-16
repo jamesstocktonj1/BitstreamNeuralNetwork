@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 bitRange = 16
-probRange = 20
+probRange = 200
 
 p1 = 0.25
 p2 = 0.50
