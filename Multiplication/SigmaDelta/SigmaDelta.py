@@ -42,6 +42,8 @@ class SigmaDeltaStream:
 
         self.bitStream = newStream
 
+    def get(self):
+        return self.bitStream[self.curIndex]
+
     def next(self):
         self.curIndex = (self.curIndex + 1) % len(self.bitStream)
-        return self.bitStream[self.curIndex]
