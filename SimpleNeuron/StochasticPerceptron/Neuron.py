@@ -33,15 +33,12 @@ class Neuron:
         self.input_length = bsLength
         self.weight_length = bwLength
         
-        self.weights = np.zeros(shape=(inputSize, bwLength))
+        self.weights = np.zeros(shape=(inputSize, bwLength), dtype=np.int32)
 
 
     def set_weights(self, w):
-        print(self.weights)
         for i in range(len(w)):
             self.weights[i] = np.array(bitstream_generator(w[i], self.weight_length))
-        print(self.weights)
-
 
     def increment_weights(self, l: np.ndarray):
         for i in range(len(self.weights)):
