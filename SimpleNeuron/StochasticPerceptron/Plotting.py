@@ -11,6 +11,16 @@ z = np.zeros(shape=(2, N), dtype=np.int32)
 neuron = Neuron(2, N, N)
 neuron.set_weights(w)
 
+realNeuron = RealNeuron(np.array(w))
+
+
+fig1 = plt.subplot(1, 2, 1)
+fig1.set_title("Bit-Neuron")
+fig1.set_aspect("equal", adjustable="box")
+
+fig2 = plt.subplot(1, 2, 2)
+fig2.set_title("Real-Neuron")
+fig2.set_aspect("equal", adjustable="box")
 
 X = 25
 for x in range(X):
@@ -20,18 +30,24 @@ for x in range(X):
         z[1] = bitstream_generator(y/X, N)
 
         a = []
-        for i in range(20):
+        for i in range(1):
             w = neuron.call(z)
             w = bitstream_integrator(w)
 
             a.append(w)
 
         o = sum(a) / len(a)
-
-        print("X: {}\tY:{}\tZ: {}".format(x/X, y/X, o))
         if o > 0.5:
-            plt.plot(x, y, 'rx') 
+            fig1.plot(x, y, 'rx') 
         else:
-            plt.plot(x, y, 'bo')
+            fig1.plot(x, y, 'bo')
 
-plt.show()
+        o = realNeuron.call([x/X, y/X])
+        if o > 0.5:
+            fig2.plot(x, y, 'rx') 
+        else:
+            fig2.plot(x, y, 'bo')
+            
+plt.suptitle("{}-Bit Perceptron Comparison".format(N))
+plt.savefig("perceptron_comparison.png")
+#plt.show()

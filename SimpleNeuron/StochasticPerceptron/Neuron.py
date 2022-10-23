@@ -57,3 +57,13 @@ class Neuron:
         x = (x > 0) * 1
 
         return x
+
+
+class RealNeuron:
+
+    def __init__(self, weights):
+        self.weights = weights
+
+    def call(self, input):
+        x = input * self.weights
+        return sum(x)
