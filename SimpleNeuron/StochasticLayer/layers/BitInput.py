@@ -11,17 +11,13 @@ class BitInput(Layer):
         self.bit_size = bit_size
 
     def call(self, input):
-
-        #x = tf.get_static_value(input)
         
+        # converts array of floats into bitstream (recursive unpacking)
         def generate_bin(inputs):
-            if tf.shape(inputs).shape != 0:
+            if inputs.get_shape().ndims != 0:
                 return tf.map_fn(generate_bin, inputs)
             else:
                 return np.random.binomial(1, inputs, self.bit_size)
-        
-
-        
 
         return generate_bin(input)
 
