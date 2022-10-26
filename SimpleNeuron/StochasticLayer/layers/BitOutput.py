@@ -17,7 +17,6 @@ class BitOutput(Layer):
         return tf.constant(x)
 
 
-
 def bitoutput_test():
 
     layer = BitOutput()
@@ -40,3 +39,6 @@ def bitoutput_test():
     print("\n2D to 1D Convert")
     print(x2)
     print(y2)
+
+if __name__ == "__main__":
+    bitoutput_test()

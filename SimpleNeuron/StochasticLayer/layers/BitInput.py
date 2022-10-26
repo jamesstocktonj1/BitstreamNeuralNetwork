@@ -45,3 +45,6 @@ def bitinput_test():
     print("2D to 3D Convert")
     print(x2)
     print(y2)
+
+if __name__ == "__main__":
+    bitinput_test()
