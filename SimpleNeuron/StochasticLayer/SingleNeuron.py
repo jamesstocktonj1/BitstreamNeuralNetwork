@@ -8,8 +8,8 @@ from layers.BitLayer import BitLayer
 
 
 # constants
-N = 128         # number of bits
-X = 50          # plot range
+N = 256         # number of bits
+X = 50         # plot range
 
 
 class SingleNeuron(Model):
@@ -45,4 +45,5 @@ for i in range(X):
         else:
             plt.plot(x[0], x[1], 'bo')
 
-plt.show()
+plt.savefig("images/tf_bitlayer_{}.png".format(N))
+#plt.show()
