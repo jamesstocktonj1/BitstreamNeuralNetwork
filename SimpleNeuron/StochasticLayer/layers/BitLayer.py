@@ -33,7 +33,6 @@ class BitLayer(Layer):
     def call(self, inputs):
 
         w = self.generate_weights()
-        print(self.kernel)
 
         def compute_mult(weight, inputs):
             # cast to and-able form
