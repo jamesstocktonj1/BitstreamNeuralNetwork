@@ -22,6 +22,18 @@ def bitstream_generator(p, N):
 
 
 '''
+generates bitstream of length N with a better result than using binomial
+'''
+def bitstream_generator_exact(p, N):
+    n_bits = int(np.round(p * N))
+    bs = np.concatenate((
+        np.ones((n_bits)),
+        np.zeros((N - n_bits))
+    ))
+    return np.random.permutation(bs)
+
+
+'''
 takes in numpy array and converts to floating value [0,1]
 '''
 def bitstream_integrator(bs):
@@ -38,7 +50,7 @@ class Neuron:
 
     def set_weights(self, w):
         for i in range(len(w)):
-            self.weights[i] = np.array(bitstream_generator(w[i], self.weight_length))
+            self.weights[i] = np.array(bitstream_generator_exact(w[i], self.weight_length))
 
     def increment_weights(self, l: np.ndarray):
         for i in range(len(self.weights)):

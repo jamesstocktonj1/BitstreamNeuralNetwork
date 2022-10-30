@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Neuron import *
 
-N = 128
+N = 2 ** 16
 X = 50
 
 
@@ -32,8 +32,8 @@ falseCount = 0
 for x in range(X):
     for y in range(X):
 
-        z[0] = bitstream_generator(x/X, N)
-        z[1] = bitstream_generator(y/X, N)
+        z[0] = bitstream_generator_exact(x/X, N)
+        z[1] = bitstream_generator_exact(y/X, N)
 
         a = []
         for i in range(1):
@@ -61,5 +61,5 @@ print("False Classifications: {}".format(falseCount))
 print("False Classifications: {}%".format((falseCount * 100) / (X ** 2)))
 
 plt.suptitle("{}-Bit Perceptron Comparison".format(N))
-plt.savefig("images/perceptron_false_{}bit.png".format(N))
+plt.savefig("images/perceptron_false_{}bit_exact.png".format(N))
 #plt.show()

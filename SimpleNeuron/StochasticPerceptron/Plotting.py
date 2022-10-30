@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Neuron import *
 
-N = 64
+N = 1024
 
 
 w = [0.35, 0.94]
+#w = [0.55, 0.35]
 z = np.zeros(shape=(2, N), dtype=np.int32)
 
 neuron = Neuron(2, N, N)
@@ -22,12 +23,13 @@ fig2 = plt.subplot(1, 2, 2)
 fig2.set_title("Real-Neuron")
 fig2.set_aspect("equal", adjustable="box")
 
-X = 25
+X = 50
+
 for x in range(X):
     for y in range(X):
 
-        z[0] = bitstream_generator(x/X, N)
-        z[1] = bitstream_generator(y/X, N)
+        z[0] = bitstream_generator_exact(x/X, N)
+        z[1] = bitstream_generator_exact(y/X, N)
 
         a = []
         for i in range(1):
@@ -38,16 +40,16 @@ for x in range(X):
 
         o = sum(a) / len(a)
         if o > 0.5:
-            fig1.plot(x, y, 'rx') 
+            fig1.plot(x, y, 'ro') 
         else:
             fig1.plot(x, y, 'bo')
 
         o = realNeuron.call([x/X, y/X])
         if o > 0.5:
-            fig2.plot(x, y, 'rx') 
+            fig2.plot(x, y, 'ro') 
         else:
             fig2.plot(x, y, 'bo')
             
 plt.suptitle("{}-Bit Perceptron Comparison".format(N))
-plt.savefig("perceptron_comparison.png")
+plt.savefig("images/perceptron_{}bit_exact.png".format(N))
 #plt.show()
