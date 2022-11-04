@@ -4,6 +4,15 @@ import numpy as np
 from tensorflow.keras.layers import Layer
 
 
+def bitstream_generator_exact(p, N):
+    n_bits = int(np.round(p * N))
+    bs = np.concatenate((
+        np.ones((n_bits)),
+        np.zeros((N - n_bits))
+    ))
+    return np.random.permutation(bs)
+
+
 class BitInput(Layer):
     def __init__(self, bit_size):
         super(BitInput, self).__init__()
@@ -17,7 +26,7 @@ class BitInput(Layer):
             if inputs.get_shape().ndims != 0:
                 return tf.map_fn(generate_bin, inputs)
             else:
-                return np.random.binomial(1, inputs, self.bit_size)
+                return bitstream_generator_exact(inputs, self.bit_size)
 
         return generate_bin(input)
 
