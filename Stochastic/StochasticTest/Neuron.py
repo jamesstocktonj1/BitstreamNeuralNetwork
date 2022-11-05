@@ -46,6 +46,16 @@ def bitstream_mux_or(a, b):
 
     return (((a == 1) & (mux_mask == 1)) | ((b == 1) & (mux_mask_n == 1))) * 1
 
+def bitstream_mux_sum(a):
+    input_count = a.shape[0]
+    input_length = a.shape[1]
+
+    y = np.zeros(input_length)
+
+    for i in range(0, input_length):
+        y[i] = a[i % input_count][i]
+
+    return y
 
 
 class Neuron:
