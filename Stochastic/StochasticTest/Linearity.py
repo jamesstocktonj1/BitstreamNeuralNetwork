@@ -4,39 +4,44 @@ import matplotlib.pyplot as plt
 from Neuron import *
 
 
-N = 1024
-
+N = list(2**n for n in range(4, 11))
 X = 50
 
 
 gradients = [0.1, 0.3, 0.6]
 line_colors = ['c', 'm', 'y']
 
-plt.xlim(0, 1)
-plt.ylim(0, 1)
 
-# iterate through gradients
-for m, cl in zip(gradients, line_colors):
+for n in N:
+    plt.figure()
 
-    x = list(i/X for i in range(X))
-    y = []
-    y1 = []
-    
-    b = bitstream_generator_exact(m, N)
-    
-    for i in range(X):
-        i = i / X
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
 
-        a = bitstream_generator_exact(i, N)
+    # iterate through gradients
+    for m, cl in zip(gradients, line_colors):
+
+        x = list(i/X for i in range(X))
+        y = []
+        y1 = []
         
-        c = (a == 1) | (b == 1)
-        c = bitstream_integrator(c)
+        b = bitstream_generator_exact(m, n)
+        
+        for i in range(X):
+            i = i / X
 
-        y.append(c)
-        y1.append(i + m - (i * m))
+            a = bitstream_generator_exact(i, n)
+            
+            c = (a == 1) & (b == 1)
+            #c = (a == 1) | (b == 1)
+            c = bitstream_integrator(c)
 
-    plt.plot(x, y, color=cl)
-    plt.plot(x, y1, color=cl, linestyle='dashed')
+            y.append(c)
+            y1.append(i * m)
+            #y1.append(i + m - (i * m))
 
-plt.savefig("images/linearity_sum_plus_{}bit.png".format(N))
-#plt.show()
+        plt.plot(x, y, color=cl)
+        plt.plot(x, y1, color=cl, linestyle='dashed')
+
+    plt.savefig("images/linearity_mult_{}bit.png".format(n))
+    plt.close()
