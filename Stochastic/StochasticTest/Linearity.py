@@ -12,12 +12,13 @@ X = 50
 gradients = [0.1, 0.3, 0.6]
 line_colors = ['c', 'm', 'y']
 
+plt.xlim(0, 1)
 plt.ylim(0, 1)
 
 # iterate through gradients
 for m, cl in zip(gradients, line_colors):
 
-    x = list(range(X))
+    x = list(i/X for i in range(X))
     y = []
     y1 = []
     
