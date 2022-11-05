@@ -32,16 +32,19 @@ for n in N:
 
             a = bitstream_generator_exact(i, n)
             
-            c = (a == 1) & (b == 1)
+            #c = (a == 1) & (b == 1)
             #c = (a == 1) | (b == 1)
-            c = bitstream_integrator(c)
+            c = bitstream_mux_or(a, b)
 
+            c = bitstream_integrator(c)
             y.append(c)
-            y1.append(i * m)
+
+            #y1.append(i * m)
             #y1.append(i + m - (i * m))
+            y1.append((i + m) / 2)
 
         plt.plot(x, y, color=cl)
         plt.plot(x, y1, color=cl, linestyle='dashed')
 
-    plt.savefig("images/linearity_mult_{}bit.png".format(n))
+    plt.savefig("images/linearity_sum_mux_{}bit.png".format(n))
     plt.close()

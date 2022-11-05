@@ -40,6 +40,14 @@ def bitstream_integrator(bs):
     return (bs == 1).sum() / len(bs)
 
 
+def bitstream_mux_or(a, b):
+    mux_mask = np.tile([0, 1], len(a) // 2)
+    mux_mask_n = (mux_mask == 0)
+
+    return (((a == 1) & (mux_mask == 1)) | ((b == 1) & (mux_mask_n == 1))) * 1
+
+
+
 class Neuron:
     def __init__(self, inputSize, bsLength, bwLength):
         self.input_length = bsLength
