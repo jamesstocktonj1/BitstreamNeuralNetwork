@@ -50,7 +50,11 @@ class Neuron:
 
     def set_weights(self, w):
         for i in range(len(w)):
-            self.weights[i] = np.array(bitstream_generator_exact(w[i], self.weight_length))
+            if (w[i] < 0) or (w[i] > 1):
+                print("Error: Non-Positive Weight, value: {}".format(w[i]))
+                self.weights[i] = np.zeros(self.weight_length)
+            else:
+                self.weights[i] = np.array(bitstream_generator_exact(w[i], self.weight_length))
 
     def increment_weights(self, l: np.ndarray):
         for i in range(len(self.weights)):
@@ -60,7 +64,7 @@ class Neuron:
     def call(self, input):
 
         # bitstream mulitplication
-        x = input & self.weights[:,:self.input_length]
+        x = (input == 1) & (self.weights[:,:self.input_length] == 1)
 
         # sum columns
         x = x.sum(axis=0)
