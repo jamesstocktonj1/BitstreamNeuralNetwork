@@ -28,6 +28,7 @@ def plot_data(x, y, N):
 def training_loop(x, y, r, N):
     # setup neuron with initial weights
     neuron = Neuron(2, N, N)
+    w = np.random.randint(0, 20, size=(2)) * 0.05
     w = np.array([0.5, 0.5])
     neuron.set_weights(w)
 
@@ -101,6 +102,38 @@ def perceptron_flood(R, N, neuron):
     plt.close()
 
 
+def perceptron_dual_plot(x, y, R, N, neuron):
+    plt.figure()
+    fig1 = plt.subplot(1, 2, 1)
+    fig1.set_aspect("equal", adjustable="box")
+    
+    fig2 = plt.subplot(1, 2, 2)
+    fig2.set_aspect("equal", adjustable="box")
+
+    # plot points
+    fig1.plot(x[:X//2, 0], x[:X//2, 1], 'bo')
+    fig1.plot(x[X//2:, 0], x[X//2:, 1], 'ro')
+
+    # plot flood
+    for i in range(R):
+        i = i / R
+        x_0 = bitstream_generator_exact(i, N)
+
+        for j in range(R):
+            j = j / R
+            x_1 = bitstream_generator_exact(j, N)
+
+            y = neuron.call(np.array([x_0, x_1]))
+            y = bitstream_integrator(y)
+
+            if y > 0.5:
+                fig2.plot(i, j, 'ro')
+            else:
+                fig2.plot(i, j, 'bo')
+
+
+    plt.savefig("images/perceptron_dual_{}bits.png".format(N))
+    plt.close()
 
 
 for n in N:
@@ -109,5 +142,7 @@ for n in N:
     print("\nPerceptron {}-Bits".format(n))
     print("Weights: {}".format(w))
 
-    plot_data(x, y, n)
-    perceptron_flood(50, n, neuron)
+    perceptron_dual_plot(x, y, 50, n, neuron)
+
+    #plot_data(x, y, n)
+    #perceptron_flood(50, n, neuron)
