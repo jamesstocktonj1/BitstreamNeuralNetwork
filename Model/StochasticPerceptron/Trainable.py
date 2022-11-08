@@ -6,12 +6,17 @@ from Neuron import *
 # parameters
 N = list(2**n for n in range(4, 12))
 X = 100
-trainingRate = 0.1
+trainingRate = 0.01
 
 
 # create dataset
-x = np.vstack([np.random.randint(0, 20, size=(X//2, 2))*0.025, np.random.randint(20, 40, size=(X//2, 2))*0.025])
-y = np.hstack([np.ones(X//2) * -1, np.ones(X//2)]).reshape(-1, 1)
+# x = np.vstack([np.random.randint(0, 20, size=(X//2, 2))*0.025, np.random.randint(20, 40, size=(X//2, 2))*0.025])
+# y = np.hstack([np.ones(X//2) * -1, np.ones(X//2)]).reshape(-1, 1)
+
+# create normal dataset
+x = np.vstack([np.random.randn(X//2, 2)/6 + 0.25, np.random.randn(X//2, 2)/6 + 0.75])
+x = np.clip(x, 0, 1.0)
+y = np.hstack([-np.ones(X//2), np.ones(X//2)]).reshape(-1, 1)
 
 
 # plot points
