@@ -34,7 +34,7 @@ def training_loop(x, y, r, N, epochs):
     # setup neuron with initial weights
     neuron = Neuron(2, N, N)
     #w = np.random.randint(0, 20, size=(2)) * 0.05
-    weights = np.array([0.5, 0.5])
+    weights = np.array([0.1, 0.1])
     neuron.set_weights(weights)
 
     for e in range(epochs):
@@ -83,6 +83,7 @@ def training_loop(x, y, r, N, epochs):
 
     # evaluate model
     correct = np.zeros(y.shape)
+    neuron.set_weights(weights)     # re-randomise the weights
     for rxy in range(len(x)):
         x_hat0 = bitstream_generator_exact(x[rxy][0], N)
         x_hat1 = bitstream_generator_exact(x[rxy][1], N)
@@ -92,7 +93,7 @@ def training_loop(x, y, r, N, epochs):
         if (y_hat > 0.5) == (y[rxy] == 1):
             correct[rxy] = 1
 
-    print("Model Evaluation, Incorrect Points: {}".format(np.sum(correct == 0)))
+    print("Model Evaluation, Accuracy: {:.2f}%".format((np.sum(correct == 1) / len(correct)) * 100))
 
     return weights, neuron
 
@@ -166,16 +167,11 @@ def main():
 
         perceptron_dual_plot(x.get(), y.get(), 50, n, neuron, w.get())
 
-        #plot_data(x, y, n)
-        #perceptron_flood(50, n, neuron)
 
 if __name__ == "__main__":
+    start = time.time()
     np.cuda.Device(1).use()
     with np.cuda.Device(1):
         main()
-    '''
-    with np.cuda.Device(1):
-        xp = np.get_array_module(x)
-        print("Using Device: {}".format(xp.__name__))
-        main()
-    '''
+    end = time.time() - start
+    print("Time: {}".format(end))

@@ -83,6 +83,7 @@ def training_loop(x, y, r, N, epochs):
 
     # evaluate model
     correct = np.zeros(y.shape)
+    neuron.set_weights(weights)     # re-randomise the weights
     for rxy in range(len(x)):
         x_hat0 = bitstream_generator_exact(x[rxy][0], N)
         x_hat1 = bitstream_generator_exact(x[rxy][1], N)
@@ -92,7 +93,7 @@ def training_loop(x, y, r, N, epochs):
         if (y_hat > 0.5) == (y[rxy] == 1):
             correct[rxy] = 1
 
-    print("Model Evaluation, Incorrect Points: {}".format(np.sum(correct == 0)))
+    print("Model Evaluation, Accuracy: {:.2f}%".format((np.sum(correct == 1) / len(correct)) * 100))
 
     return weights, neuron
 
@@ -157,13 +158,15 @@ def perceptron_dual_plot(x, y, R, N, neuron, weights):
     plt.close()
 
 
-for n in N:
+def main():
+    for n in N:
 
-    print("\nPerceptron {}-Bits".format(n))
-    w, neuron = training_loop(x, y, trainingRate, n, 5)
-    print("Weights: {}".format(w))
+        print("\nPerceptron {}-Bits".format(n))
+        w, neuron = training_loop(x, y, trainingRate, n, 5)
+        print("Weights: {}".format(w))
 
-    perceptron_dual_plot(x, y, 50, n, neuron, w)
+        perceptron_dual_plot(x, y, 50, n, neuron, w)
 
-    #plot_data(x, y, n)
-    #perceptron_flood(50, n, neuron)
+
+if __name__ == "__main__":
+    main()
