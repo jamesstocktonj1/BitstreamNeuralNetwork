@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 from tensorflow.keras.layers import Layer
+from layers.BitInput import bitstream_generator_exact
 
 
 
@@ -26,7 +27,7 @@ class BitLayer(Layer):
             if inputs.get_shape().ndims != 0:
                 return tf.map_fn(generate_bin, inputs)
             else:
-                return np.random.binomial(1, inputs, self.bit_size)
+                return bitstream_generator_exact(inputs, self.bit_size)
 
         return generate_bin(self.kernel)
 
@@ -46,22 +47,30 @@ class BitLayer(Layer):
             temp = tf.reduce_sum(temp, 0)
 
             # normalise values
-            temp = (temp.numpy() > 0) * 1
+            temp = tf.cond(temp > 0, lambda: 1, lambda: 0)
 
-            return tf.constant(temp, dtype=tf.float32)
+            return temp
+
+            # return tf.constant(temp, dtype=tf.float32)
 
 
         def compute_output(weight, inputs):
             # itterate through output size
-            return tf.map_fn(lambda w: compute_mult(w, inputs), weight)
+            return tf.map_fn(lambda w: compute_mult(w, inputs), weight, dtype=tf.float32)
 
+        output = None
             
         # if batch data then unpack
         if inputs.get_shape().ndims == 3:
-            return tf.map_fn(lambda x: compute_output(w, x), inputs)
+            output = tf.map_fn(lambda x: compute_output(w, x), inputs)
         else:
-            return compute_output(w, inputs)
+            output = compute_output(w, inputs)
 
+        # compute bitstream value for loss
+        y_output = tf.math.reduce_sum(output, axis=tf.rank(output) - 1) / self.bit_size
+        self.add_loss(y_output)
+
+        return output
 
 def bitlayer_test():
 
