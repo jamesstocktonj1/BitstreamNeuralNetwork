@@ -5,12 +5,12 @@ from tensorflow.keras.layers import Layer
 
 
 def bitstream_generator_exact(p, N):
-    n_bits = int(np.round(p * N))
-    bs = np.concatenate((
-        np.ones((n_bits)),
-        np.zeros((N - n_bits))
-    ))
-    return np.random.permutation(bs)
+    n_bits = int(tf.round(p * N))
+    bs = tf.concat([
+        tf.ones((n_bits)),
+        tf.zeros((N - n_bits))
+    ], 0)
+    return tf.random.shuffle(bs)
 
 
 class BitInput(Layer):
