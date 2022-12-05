@@ -5,11 +5,11 @@ import numpy as np
 
 class Neuron:
     def __init__(self, input_shape):
-        self.w = np.zeros((input_shape))
+        self.weights = np.zeros((input_shape))
 
     def set_weights(self, w):
-        self.w = w
+        self.weights = w
 
     def call(self, x):
-        mult = x * self.w
-        return 1 - np.product(mult)
+        mult = x * self.weights
+        return 1 - np.product(1 - mult)
