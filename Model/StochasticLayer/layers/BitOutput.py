@@ -8,13 +8,10 @@ class BitOutput(Layer):
 
     def call(self, input):
 
-        # convert to numpy array
-        x = tf.get_static_value(input)
-
         # count number of 1s and divide by bitlength
-        x = (x == 1).sum(axis=tf.rank(input) - 1) / input.shape[-1]
+        x = tf.math.reduce_sum(input, axis=tf.rank(input) - 1) / input.shape[-1]
         
-        return tf.constant(x)
+        return x
 
 
 def bitoutput_test():
