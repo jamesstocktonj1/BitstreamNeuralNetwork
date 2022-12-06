@@ -6,7 +6,7 @@ from Neuron import *
 
 # parameters
 N = list(2**n for n in range(4, 12))
-X = 50
+X = 250
 trainingRate = 0.0005
 
 
@@ -120,6 +120,23 @@ def perceptron_flood(neuron):
     plt.savefig("images/perceptron_flood_{}bits.png".format(N))
     plt.close()
 
+def plot_decision(neuron, x, y):
+    plt.figure()
+
+    x_t = np.arange(0, 1, 1/X)
+    y_t = neuron.decision(x_t)
+
+    plt.plot(x[:X//2, 0], x[:X//2, 1], 'ro')
+    plt.plot(x[X//2:, 0], x[X//2:, 1], 'bo')
+
+    plt.plot(x_t, y_t)
+
+    plt.xlim([0,1])
+    plt.ylim([0,1])
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.savefig("images/perceptron_decision.png")
+    plt.close()
 
 def perceptron_dual_plot(x, y, R, N, neuron, weights):
     plt.figure()
@@ -161,6 +178,7 @@ def main():
     print("\n\"Real\" Perceptron")
     w, neuron = train_like_neuron_loop(x, y, trainingRate, 10)
     # perceptron_flood(neuron)
+    plot_decision(neuron, x, y)
     print("Weights: {}".format(w))
 
 
