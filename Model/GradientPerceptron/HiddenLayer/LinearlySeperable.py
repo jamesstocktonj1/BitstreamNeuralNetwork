@@ -8,7 +8,7 @@ from Model import *
 # parameters
 N = list(2**n for n in range(4, 12))
 X = 250
-trainingRate = 0.000075
+trainingRate = 0.00025
 
 
 # create normal dataset
@@ -48,7 +48,9 @@ def train_like_neuron_loop(x, y, r, epochs):
 
     model = HiddenPerceptron()
 
-    weights = np.ones((6, )) * 0.5
+    # weights = np.ones((6, )) * 0.5
+    weights = np.random.randn(6)
+    weights = np.interp(weights, (weights.min(), weights.max()), (0.4, 0.6))
     model.set_weights(weights)
 
     for e in range(epochs):
@@ -107,14 +109,15 @@ def train_like_neuron_loop(x, y, r, epochs):
 
 
 def perceptron_flood(neuron):
+    R = 100
     plt.figure()
 
-    x = np.arange(0, 1, 1/X)
-    y = np.arange(0, 1, 1/X)
+    x = np.arange(0, 1, 1/R)
+    y = np.arange(0, 1, 1/R)
     x, y = np.meshgrid(x, y)
 
-    for i in range(X):
-        for j in range(X):
+    for i in range(R):
+        for j in range(R):
             z = neuron.call(np.array([x[i,j], y[i,j]]))
 
             if z > 0.5:
@@ -208,8 +211,9 @@ def main():
     w, model = train_like_neuron_loop(x, y, trainingRate, 2)
     # perceptron_flood(neuron)
     # plot_decision(neuron, x, y)
-    plot_model(model)
     print("Weights: {}".format(w))
+    
+    plot_model(model)
 
 
 if __name__ == "__main__":
