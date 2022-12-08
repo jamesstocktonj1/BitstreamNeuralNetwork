@@ -8,7 +8,7 @@ from Model import *
 # parameters
 N = list(2**n for n in range(4, 12))
 X = 250
-trainingRate = 0.000005
+trainingRate = 0.000075
 
 
 # create normal dataset
@@ -193,8 +193,8 @@ def plot_model(model):
 
     for i in range(50):
         for j in range(50):
-            print(x_t[i,j], y_t[i,j])
-            modelPlane[i,j] = model.call(np.array(x_t[i,j], y_t[i,j]))
+            temp = model.call(np.array([x_t[i,j], y_t[i,j]]))
+            modelPlane[i,j] = (temp > 0.5) * 1
 
     surf = fig1.plot_surface(x_t, y_t, modelPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
 
@@ -205,10 +205,10 @@ def plot_model(model):
 
 def main():
     print("\n\"Real\" Perceptron")
-    w, model = train_like_neuron_loop(x, y, trainingRate, 10)
+    w, model = train_like_neuron_loop(x, y, trainingRate, 2)
     # perceptron_flood(neuron)
     # plot_decision(neuron, x, y)
-    # plot_model(model)
+    plot_model(model)
     print("Weights: {}".format(w))
 
 
