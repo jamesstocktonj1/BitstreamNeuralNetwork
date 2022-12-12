@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel
+from NeuralModel import SimpleModel, HiddenModel, DeepModel
 
 
 X = 250
@@ -83,8 +83,36 @@ def plot_3d_plane(model):
     fig.colorbar(surf)
     plt.show()
 
+def plot_loss_epoch(correct, loss):
+    plt.figure()
+
+    fig1 = plt.subplot(2, 1, 1)
+    fig2 = plt.subplot(2, 1, 2)
+
+    fig1.plot(np.arange(len(correct)), correct)
+    fig2.plot(np.arange(len(loss)), loss)
+
+    plt.savefig("images/simple_epochs.png")
+    plt.close()
+
+def plot_grad_epoch(grad):
+    plt.figure()
+
+    grad1 = list(g[0] for g in grad)
+    grad2 = list(g[1] for g in grad)
+    grad3 = list(g[2] for g in grad)
+
+    plt.plot(np.arange(len(grad1)), grad1)
+    plt.plot(np.arange(len(grad2)), grad2)
+    plt.plot(np.arange(len(grad3)), grad3)
+
+    plt.savefig("images/simple_grad.png")
+    plt.close()
+
 def training_loop(x, y):
+    # plot_grad_epoch(gradEpoch)
     model = HiddenModel(0.0025)
+    # model = DeepModel(0.006125)
 
     print(model.layer1.weights)
     print(model.layer2.weights)
@@ -94,7 +122,9 @@ def training_loop(x, y):
     for rxy in range(len(x)):
         model.grad(x[rxy], y[rxy])
 
-    for e in range(20):
+    correctEpoch = []
+    lossEpoch = []
+    for e in range(250):
 
         # initial pass
         correct = np.zeros(y.shape)
@@ -107,6 +137,12 @@ def training_loop(x, y):
         for rxy in np.where(correct < 1)[0]:
             grads = model.grad(x[rxy], y[rxy])
             # print(grads)
+        # tempGrad = 0
+        # for rxy in range(len(x)):
+        #     grads = model.grad(x[rxy], y[rxy])
+        #     tempGrad += grads[1][0]
+        # gradEpoch.append(tempGrad / len(x))
+        
 
         correct = np.zeros(y.shape)
         modelLoss = 0
@@ -117,6 +153,9 @@ def training_loop(x, y):
                 correct[rxy] = 1
 
             modelLoss += model.loss(x[rxy], y[rxy])[0]
+        
+        correctEpoch.append(correct.sum())
+        lossEpoch.append(modelLoss)
 
         print("Epoch {}: {}/{}".format(e, correct.sum(), len(correct)))
         print("      {}".format(modelLoss / X))
@@ -136,8 +175,12 @@ def training_loop(x, y):
 
     print(model.layer1.weights)
     print(model.layer2.weights)
+    print(model.layer3.weights)
+    
+    plot_loss_epoch(correctEpoch, lossEpoch)
 
     plot_decision(model)
+    # plot_grad_epoch(gradEpoch)
     # plot_3d_plane(model)
 
 
