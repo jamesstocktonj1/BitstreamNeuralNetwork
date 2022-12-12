@@ -4,8 +4,6 @@ import numpy as np
 
 
 
-
-
 class NeuralLayer:
 
     def __init__(self, input_size, output_size):
@@ -13,11 +11,38 @@ class NeuralLayer:
         self.input_size = input_size
         self.output_size = output_size
 
-    def grad(self, x):
-
+    
+    def grad_loss(self, x, y):
         grads = np.zeros((self.output_size, self.input_size))
+
+        for i in range(self.output_size):
+            for j in range(self.input_size):
+
+                grads[i,j] = -2 * x[j]
+                for k in range(self.input_size):
+                    if k != j:
+                        grads[i,j] *= 1 - (self.weights[i,k] * x[k])
+                
+                grads[i,j] *= y[i] - 1 + np.product(1 - (self.weights[i] * x))
         
-        # itterate through neurons
+        return grads
+
+    def grad_layer(self, x, z):
+        grads = np.zeros((self.output_size, self.input_size))
+
+        for i in range(self.output_size):
+            for j in range(self.input_size):
+
+                grads[i,j] = -1 * self.weights[i,j]
+                for k in range(self.input_size):
+                    if k != j:
+                        grads[i,j] *= 1 - (self.weights[i,k] * x[k])
+
+        return grads
+
+    def grad_weight(self, x):
+        grads = np.zeros((self.output_size, self.input_size))
+
         for i in range(self.output_size):
             for j in range(self.input_size):
 
@@ -28,25 +53,13 @@ class NeuralLayer:
 
         return grads
 
-    def loss_grad(self, x, y):
-
-        grads = np.zeros((self.output_size, self.input_size))
-        
-        # itterate through neurons
-        for i in range(self.output_size):
-            for j in range(self.input_size):
-
-                grads[i,j] = -2 * x[j]
-                for k in range(self.input_size):
-                    if k != j:
-                        grads[i,j] *= 1 - (self.weights[i,k] * x[k])
-
-                grads[i,j] *= y[i] - 1 + np.product(1 - (self.weights[i] * x), axis=0)
-
-        return grads
 
     def call(self, x):
         return 1 - np.product(1 - (self.weights * x), axis=1)
+
+
+
+
 
 
 
