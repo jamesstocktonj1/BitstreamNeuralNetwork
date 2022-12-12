@@ -3,7 +3,7 @@ import numpy.linalg as la
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel
+from NeuralModel import SimpleModel, BigModel
 
 
 X = 250
@@ -45,26 +45,25 @@ def plot_confusion_matrix(y1Data, y2Data):
 
 
 def training_loop(x, y):
-    model = SimpleModel(0.000125)
+    model = SimpleModel(1)
     model.init_weights()
 
     # set initial weights
     for rxy in range(len(x)):
         model.grad(x[rxy], y[rxy])
 
-    for e in range(10):
+    for e in range(20):
 
         # initial pass
         correct = np.zeros(y.shape)
         for rxy in range(len(x)):
             y_hat = model.call(x[rxy])
 
-            if (y_hat > 0.5) == (y[rxy] == 1):
-                correct[rxy] = 1
+            correct[rxy] = ((y_hat > 0.5) == (y[rxy] == 1)) * 1
 
         # train incorrect points
         for rxy in np.where(correct < 1)[0]:
-            grad1, grad2 = model.grad(x[rxy], y[rxy])
+            grads = model.grad(x[rxy], y[rxy])
 
         correct = np.zeros(y.shape)
         for rxy in range(len(x)):
@@ -87,6 +86,9 @@ def training_loop(x, y):
     plot_confusion_matrix(y_hat > 0.5, y)
 
     print("Model Evaluation, Accuracy: {:.2f}%".format((np.sum(correct == 1) / len(correct)) * 100))
+
+    print(model.layer1.weights)
+    print(model.layer2.weights)
 
 
 

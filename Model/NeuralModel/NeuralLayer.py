@@ -41,7 +41,7 @@ class NeuralLayer:
                     if k != j:
                         grads[i,j] *= 1 - (self.weights[i,k] * x[k])
 
-                grads[i,j] *= y[i] - 1 + np.product(1 - (self.weights[i] * x))
+                grads[i,j] *= y[i] - 1 + np.product(1 - (self.weights[i] * x), axis=0)
 
         return grads
 
