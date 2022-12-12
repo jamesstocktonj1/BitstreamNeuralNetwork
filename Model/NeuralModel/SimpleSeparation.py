@@ -1,9 +1,10 @@
 import numpy as np
 import numpy.linalg as la
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, BigModel
+from NeuralModel import SimpleModel
 
 
 X = 250
@@ -44,9 +45,50 @@ def plot_confusion_matrix(y1Data, y2Data):
     plt.close()
 
 
+def plot_decision(model):
+    plt.figure()
+
+    for i in range(50):
+        for j in range(50):
+            x = np.array([i/50, j/50])
+            y = model.call(x)
+
+            if y > 0.5:
+                plt.plot(i, j, '-ro')
+            else:
+                plt.plot(i, j, '-bx')
+
+    plt.savefig("images/simple_decision.png")
+    plt.close()
+
+def plot_3d_plane(model):
+
+    fig = plt.figure()
+    fig1 = fig.add_subplot(projection='3d')
+
+    x = np.arange(0, 1, 1/X)
+    y = np.arange(0, 1, 1/X)
+    x_t, y_t = np.meshgrid(x, y)
+
+    # neuronPlane = call_neuron(x_t, y_t, n)
+    neuronPlane = np.zeros((X, X))
+
+    for i in range(X):
+        for j in range(X):
+            neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
+
+    surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, rstride=1, cstride=1, alpha=None, antialiased=True)
+
+    fig.colorbar(surf)
+    plt.show()
+
 def training_loop(x, y):
-    model = SimpleModel(1)
-    model.init_weights()
+    model = SimpleModel(0.0025)
+
+    print(model.layer1.weights)
+    print(model.layer2.weights)
+    # model.init_weights()
 
     # set initial weights
     for rxy in range(len(x)):
@@ -59,20 +101,25 @@ def training_loop(x, y):
         for rxy in range(len(x)):
             y_hat = model.call(x[rxy])
 
-            correct[rxy] = ((y_hat > 0.5) == (y[rxy] == 1)) * 1
+            correct[rxy] = ((y_hat[0] > 0.5) == (y[rxy] == 1)) * 1
 
         # train incorrect points
         for rxy in np.where(correct < 1)[0]:
             grads = model.grad(x[rxy], y[rxy])
+            # print(grads)
 
         correct = np.zeros(y.shape)
+        modelLoss = 0
         for rxy in range(len(x)):
             y_hat = model.call(x[rxy])
 
-            if (y_hat > 0.5) == (y[rxy] == 1):
+            if (y_hat[0] > 0.5) == (y[rxy] == 1):
                 correct[rxy] = 1
 
+            modelLoss += model.loss(x[rxy], y[rxy])[0]
+
         print("Epoch {}: {}/{}".format(e, correct.sum(), len(correct)))
+        print("      {}".format(modelLoss / X))
     
     # evaluate model
     correct = np.zeros(y.shape)
@@ -80,7 +127,7 @@ def training_loop(x, y):
     for rxy in range(len(x)):
         y_hat[rxy] = model.call(x[rxy])
 
-        if (y_hat[rxy] > 0.5) == (y[rxy] == 1):
+        if (y_hat[rxy][0] > 0.5) == (y[rxy] == 1):
             correct[rxy] = 1
 
     plot_confusion_matrix(y_hat > 0.5, y)
@@ -89,6 +136,9 @@ def training_loop(x, y):
 
     print(model.layer1.weights)
     print(model.layer2.weights)
+
+    plot_decision(model)
+    # plot_3d_plane(model)
 
 
 

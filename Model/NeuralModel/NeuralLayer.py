@@ -11,19 +11,16 @@ class NeuralLayer:
         self.input_size = input_size
         self.output_size = output_size
 
-    
+    def init_weights(self, u):
+        self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
+
+
     def grad_loss(self, x, y):
         grads = np.zeros((self.output_size, self.input_size))
 
         for i in range(self.output_size):
             for j in range(self.input_size):
-
-                grads[i,j] = -2 * x[j]
-                for k in range(self.input_size):
-                    if k != j:
-                        grads[i,j] *= 1 - (self.weights[i,k] * x[k])
-                
-                grads[i,j] *= y[i] - 1 + np.product(1 - (self.weights[i] * x))
+                grads[i,j] = y[i] - 1 + np.product(1 - (self.weights[i] * x))
         
         return grads
 
@@ -80,7 +77,7 @@ def neuron_layer_test():
 
     layer.weights = w
 
-    grads = layer.grad(a)
+    grads = layer.grad_weight(a)
 
     exp_grads = np.zeros((2,2))
     exp_grads[0,0] = -1 * a[0] * (1 - (w[0,1] * a[1]))
@@ -91,13 +88,13 @@ def neuron_layer_test():
     print("Expected: ", exp_grads)
     print("Got:      ", grads)
 
-    grads = layer.loss_grad(a, b)
+    grads = layer.grad_loss(a, b)
 
     exp_grads = np.zeros((2,2))
-    exp_grads[0,0] = -2 * a[0] * (1 - (w[0,1] * a[1])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
-    exp_grads[0,1] = -2 * a[1] * (1 - (w[0,0] * a[0])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
-    exp_grads[1,0] = -2 * a[0] * (1 - (w[1,1] * a[1])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
-    exp_grads[1,1] = -2 * a[1] * (1 - (w[1,0] * a[0])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
+    exp_grads[0,0] = -2 * w[0,0] * (1 - (w[0,1] * a[1])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
+    exp_grads[0,1] = -2 * w[0,1] * (1 - (w[0,0] * a[0])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
+    exp_grads[1,0] = -2 * w[1,0] * (1 - (w[1,1] * a[1])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
+    exp_grads[1,1] = -2 * w[1,1] * (1 - (w[1,0] * a[0])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
 
     print("Expected: ", exp_grads)
     print("Got:      ", grads)
