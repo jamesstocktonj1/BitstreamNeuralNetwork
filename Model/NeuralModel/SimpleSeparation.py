@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel
+from NeuralModel import SimpleModel, HiddenModel
 
 
 X = 250
@@ -84,7 +84,7 @@ def plot_3d_plane(model):
     plt.show()
 
 def training_loop(x, y):
-    model = SimpleModel(0.0025)
+    model = HiddenModel(0.0025)
 
     print(model.layer1.weights)
     print(model.layer2.weights)
