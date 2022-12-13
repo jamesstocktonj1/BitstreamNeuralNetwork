@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel, DeepModel
+from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel
 
 
 X = 250
@@ -25,6 +25,7 @@ xb = np.dot(xb, A) + 2
 x = np.vstack([xa, xb])
 x = np.interp(x, (x.min(), x.max()), (0, 1))
 y = np.hstack([np.zeros(X//2), np.ones(X//2)]).reshape(-1, 1)
+# y = np.hstack([np.ones(X//2), np.zeros(X//2)]).reshape(-1, 1)
 
 
 def plot_confusion_matrix(y1Data, y2Data):
@@ -111,8 +112,9 @@ def plot_grad_epoch(grad):
 
 def training_loop(x, y):
     # plot_grad_epoch(gradEpoch)
-    model = HiddenModel(0.0025)
-    # model = DeepModel(0.006125)
+    # model = HiddenModel(0.0025)
+    # model = DeepModel(0.00125)
+    model = DeepDeepModel(0.00125)
 
     print(model.layer1.weights)
     print(model.layer2.weights)
@@ -124,7 +126,7 @@ def training_loop(x, y):
 
     correctEpoch = []
     lossEpoch = []
-    for e in range(250):
+    for e in range(25):
 
         # initial pass
         correct = np.zeros(y.shape)
@@ -137,10 +139,11 @@ def training_loop(x, y):
         for rxy in np.where(correct < 1)[0]:
             grads = model.grad(x[rxy], y[rxy])
             # print(grads)
+
         # tempGrad = 0
         # for rxy in range(len(x)):
         #     grads = model.grad(x[rxy], y[rxy])
-        #     tempGrad += grads[1][0]
+            # tempGrad += grads[1][0]
         # gradEpoch.append(tempGrad / len(x))
         
 
@@ -155,7 +158,7 @@ def training_loop(x, y):
             modelLoss += model.loss(x[rxy], y[rxy])[0]
         
         correctEpoch.append(correct.sum())
-        lossEpoch.append(modelLoss)
+        lossEpoch.append(modelLoss / X)
 
         print("Epoch {}: {}/{}".format(e, correct.sum(), len(correct)))
         print("      {}".format(modelLoss / X))
