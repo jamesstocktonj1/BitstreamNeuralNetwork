@@ -52,7 +52,9 @@ class NeuralLayer:
 
 
     def call(self, x):
-        return 1 - np.product(1 - (self.weights * x), axis=1)
+        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        z = 1 / (1 + np.exp(-8 * (z - 0.5)))
+        return z
 
 
 
