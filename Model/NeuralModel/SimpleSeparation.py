@@ -84,6 +84,31 @@ def plot_3d_plane(model):
     fig.colorbar(surf)
     plt.show()
 
+def plot_3d_plane_points(model, x_data, y_data):
+
+    fig = plt.figure()
+    fig1 = fig.add_subplot(projection='3d')
+
+    x = np.arange(0, 1, 1/X)
+    y = np.arange(0, 1, 1/X)
+    x_t, y_t = np.meshgrid(x, y)
+
+    # neuronPlane = call_neuron(x_t, y_t, n)
+    neuronPlane = np.zeros((X, X))
+
+    for i in range(X):
+        for j in range(X):
+            neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
+
+    surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, rstride=1, cstride=1, alpha=None, antialiased=True)
+
+    fig1.scatter(x_data[X//2:,0], x_data[X//2:,1], np.ones(X//2) * 0.5, 'ro')
+    fig1.scatter(x_data[:X//2,0], x_data[:X//2,1], np.ones(X//2) * 0.5, 'bo')
+
+    fig.colorbar(surf)
+    plt.show()
+
 def plot_loss_epoch(correct, loss):
     plt.figure()
 
@@ -112,8 +137,8 @@ def plot_grad_epoch(grad):
 
 def training_loop(x, y):
     # plot_grad_epoch(gradEpoch)
-    # model = HiddenModel(0.0025)
-    # model = DeepModel(0.00125)
+    # model = HiddenModel(0.025)
+    # model = DeepModel(0.0125)
     model = DeepDeepModel(0.00125)
 
     print(model.layer1.weights)
@@ -126,7 +151,7 @@ def training_loop(x, y):
 
     correctEpoch = []
     lossEpoch = []
-    for e in range(25):
+    for e in range(250):
 
         # initial pass
         correct = np.zeros(y.shape)
@@ -185,6 +210,7 @@ def training_loop(x, y):
     plot_decision(model)
     # plot_grad_epoch(gradEpoch)
     # plot_3d_plane(model)
+    # plot_3d_plane_points(model, x, y)
 
 
 

@@ -6,7 +6,7 @@ from Neuron import *
 
 # parameters
 N = list(2**n for n in range(4, 12))
-X = 500
+X = 50
 trainingRate = 0.002
 
 

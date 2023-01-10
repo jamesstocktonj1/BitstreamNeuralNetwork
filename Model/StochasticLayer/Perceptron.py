@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras import layers, Model
 
-from layers.BitInput import *
-from layers.BitLayer import *
-from layers.BitOutput import *
-from layers.Bitstream import *
-
+# from layers.BitInput import *
+# from layers.BitLayer import *
+# from layers.BitOutput import *
+# from layers.Bitstream import *
+from layers.BitLike import BitLayer
 
 # parameters
 N = list(2**n for n in range(4, 12))
@@ -25,28 +25,19 @@ class PerceptronModel(Model):
     def __init__(self, N):
         super(PerceptronModel, self).__init__()
 
-        self.input_layer = BitInput(N)
-        self.dense = BitLayer(1, N)
-        self.output_layer = BitOutput()
-
-        #self.dense = Bitstream(1, N)
+        self.dense = BitLayer(1)
 
     def call(self, x):
-        print("Input: ", x)
-        x = self.input_layer(x)
-        print("Bitstream: ", x)
         x = self.dense(x)
-        print("Post Dense: ", x)
-        x = self.output_layer(x)
-        
-        return x
+        print(x)
+        return x 
 
 def train_model(x, y, N):
 
     model = PerceptronModel(N)
 
-    model.build((2, ))
-    model.summary()
+    #model.build((2, ))
+    #model.summary()
 
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     model.fit(x, y, epochs=3)

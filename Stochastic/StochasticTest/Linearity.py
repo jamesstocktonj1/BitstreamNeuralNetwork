@@ -34,17 +34,22 @@ for n in N:
             
             #c = (a == 1) & (b == 1)
             #c = (a == 1) | (b == 1)
-            c = bitstream_mux_or(a, b)
+            # c = bitstream_mux_or(a, b)
+            c = (a == 1) != (b == 1)
 
             c = bitstream_integrator(c)
             y.append(c)
 
             #y1.append(i * m)
             #y1.append(i + m - (i * m))
-            y1.append((i + m) / 2)
+            # y1.append((i + m) / 2)
+            temp = (2 * i) - 1
+            temp *= c
+            temp = (temp * 0.5) + 0.5
+            y1.append(temp)
 
         plt.plot(x, y, color=cl)
         plt.plot(x, y1, color=cl, linestyle='dashed')
 
-    plt.savefig("images/linearity_sum_mux_{}bit.png".format(n))
+    plt.savefig("images/linearity_sum_xor_{}bit.png".format(n))
     plt.close()
