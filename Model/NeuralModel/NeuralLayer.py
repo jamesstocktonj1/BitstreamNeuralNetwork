@@ -65,6 +65,7 @@ class NeuralLayer:
 
     def activation(self, z):
         return 1 / (1 + np.exp(-8 * (z - 0.5)))
+        # return 1 / (1 + np.exp(-4 * z))
 
     def activation_grad(self, z):
         return self.activation(z) * (1 - self.activation(z))

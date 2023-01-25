@@ -209,7 +209,7 @@ def training_loop(x, y):
 
     plot_decision(model)
     # plot_grad_epoch(gradEpoch)
-    # plot_3d_plane(model)
+    plot_3d_plane(model)
     # plot_3d_plane_points(model, x, y)
 
 
