@@ -1,3 +1,4 @@
+from operator import xor
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -25,7 +26,8 @@ for n in N:
             a = bitstream_generator_exact(i, n)
             b = bitstream_generator_exact(j, n)
 
-            c = bitstream_mux_or(a, b)
+            # c = bitstream_mux_or(a, b)
+            c = (a == 1) != (b == 1)
 
             #c = (a == 1) & (b == 1)
             #c = (a == 1) | (b == 1)

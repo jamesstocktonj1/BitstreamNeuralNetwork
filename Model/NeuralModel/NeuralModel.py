@@ -214,8 +214,6 @@ class DeepDeepModel:
 
         dWeight1 = self.layer1.grad_weight(x)
 
-        dWeight1 = self.layer1.grad_weight(x)
-
         # print("Weight: ", dWeight1)
         dW5 = dLoss * dWeight5
         dW4 = np.dot(dLoss * dLayer5, dWeight4)

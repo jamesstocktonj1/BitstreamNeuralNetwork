@@ -37,9 +37,6 @@ def plot_loss():
     x_hat = np.interp(x_hat, (x_hat.min(), x_hat.max()), (0, 1))
     y_hat = np.hstack([np.zeros(X//2), np.ones(X//2)]).reshape(-1, 1)
 
-    # x_hat = np.array([0.01, 0.01])
-    # y_hat = 0.9
-
     x = np.arange(0, 1, 1/X)
     y = np.arange(0, 1, 1/X)
     x1, x2 = np.meshgrid(x, y)

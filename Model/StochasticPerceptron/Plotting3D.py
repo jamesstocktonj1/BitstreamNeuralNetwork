@@ -43,7 +43,7 @@ def plot_3d_plane(n):
     x_t, y_t = np.meshgrid(x, y)
 
     # neuronPlane = call_neuron(x_t, y_t, n)
-    neuronPlane = (call_real(x_t, y_t) > 0.5) * 1
+    neuronPlane = call_real(x_t, y_t)
 
     surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
     # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, rstride=1, cstride=1, alpha=None, antialiased=True)
