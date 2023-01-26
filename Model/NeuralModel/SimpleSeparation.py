@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel
+from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular
 
 
 X = 250
@@ -139,7 +139,8 @@ def training_loop(x, y):
     # plot_grad_epoch(gradEpoch)
     # model = HiddenModel(0.025)
     # model = DeepModel(0.0125)
-    model = DeepDeepModel(0.00125)
+    # model = DeepDeepModel(0.00125)
+    model = HiddenModelRegular(0.025, 0.00007)
 
     print(model.layer1.weights)
     print(model.layer2.weights)
