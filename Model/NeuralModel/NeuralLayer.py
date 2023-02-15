@@ -11,6 +11,8 @@ class NeuralLayer:
         self.input_size = input_size
         self.output_size = output_size
 
+        self.no_activation = False
+
     def init_weights(self, u):
         self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
 
@@ -48,12 +50,16 @@ class NeuralLayer:
         return -1 * x * c * z
 
     def activation(self, z):
-        return 1 / (1 + np.exp(-8 * (z - 0.5)))
-        # return z
+        if self.no_activation:
+            return z
+        else:
+            return 1 / (1 + np.exp(-8 * (z - 0.5)))
 
     def activation_grad(self, z):
-        return self.activation(z) * (1 - self.activation(z))
-        # return np.ones((z.size))
+        if self.no_activation:
+            return np.ones((z.size))
+        else:
+            return self.activation(z) * (1 - self.activation(z))
 
     def call(self, x):
         z = 1 - np.product(1 - (self.weights * x), axis=1)
@@ -68,6 +74,7 @@ class NeuralLayer:
 def neuron_layer_test():
 
     layer = NeuralLayer(2, 2)
+    layer.no_activation = True
 
     # a = np.array([0.1, 0.2])
     # b = np.array([0.5, 0.7])
