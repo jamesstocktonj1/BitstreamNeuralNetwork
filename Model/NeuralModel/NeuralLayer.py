@@ -16,19 +16,14 @@ class NeuralLayer:
 
 
     def grad_loss(self, x, y):
-        grads = np.zeros((self.output_size, self.input_size))
-        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        L = y - 1 + np.product(1 - (self.weights * x), axis=1)
+        L = L.reshape(L.size, 1)
 
-        for i in range(self.output_size):
-            for j in range(self.input_size):
-                grads[i,j] = y[i] - 1 + np.product(1 - (self.weights[i] * x))
-        
-        for j in range(self.input_size):
-            grads[:,j] *= self.activation_grad(z)
+        a = np.product(1 - (self.weights * x), axis=1)
+        b = 1 / (1 - (self.weights * x))
+        c = a.reshape(a.size, 1) * b
 
-        grads = grads.sum(axis=0)
-        
-        return grads
+        return -2 * L * self.weights * c
 
     def grad_layer(self, x, z):
         grads = np.zeros((self.output_size, self.input_size))
@@ -70,7 +65,8 @@ class NeuralLayer:
         # return 1 / (1 + np.exp(-4 * z))
 
     def activation_grad(self, z):
-        return self.activation(z) * (1 - self.activation(z))
+        # return self.activation(z) * (1 - self.activation(z))
+        return z
 
     def call(self, x):
         z = 1 - np.product(1 - (self.weights * x), axis=1)
@@ -97,6 +93,11 @@ def neuron_layer_test():
         np.random.randint(0, 10, size=2) / 10
     ])
 
+    print("\n\nTest Data...")
+    print("x: ", a)
+    print("y: ", b)
+    print("w: ", w)
+
     layer.weights = w
 
     grads = layer.grad_weight(a)
@@ -107,6 +108,7 @@ def neuron_layer_test():
     exp_grads[1,0] = -1 * a[0] * (1 - (w[1,1] * a[1]))
     exp_grads[1,1] = -1 * a[1] * (1 - (w[1,0] * a[1]))
 
+    print("\nTesting Grad Weight...")
     print("Expected: ", exp_grads)
     print("Got:      ", grads)
 
@@ -118,6 +120,7 @@ def neuron_layer_test():
     exp_grads[1,0] = -2 * w[1,0] * (1 - (w[1,1] * a[1])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
     exp_grads[1,1] = -2 * w[1,1] * (1 - (w[1,0] * a[0])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
 
+    print("\nTesting Grad Loss...")
     print("Expected: ", exp_grads)
     print("Got:      ", grads)
 
@@ -127,6 +130,7 @@ def neuron_layer_test():
     exp_y[0] = 1 - ((1 -(w[0,0] * a[0])) * (1 - (w[0,1] * a[1])))
     exp_y[1] = 1 - ((1 -(w[1,0] * a[0])) * (1 - (w[1,1] * a[1])))
 
+    print("\nTesting Call...")
     print("Expected: ", exp_y)
     print("Got:      ", y)
 
