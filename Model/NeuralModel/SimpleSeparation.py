@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel
+from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular, SimpleModelRegular
 
 
 X = 250
@@ -96,17 +96,16 @@ def plot_3d_plane_points(model, x_data, y_data):
     # neuronPlane = call_neuron(x_t, y_t, n)
     neuronPlane = np.zeros((X, X))
 
-    for i in range(X):
-        for j in range(X):
-            neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
+    # for i in range(X):
+    #     for j in range(X):
+    #         neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
 
-    surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, rstride=1, cstride=1, alpha=None, antialiased=True)
+    # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    # fig.colorbar(surf)
 
-    fig1.scatter(x_data[X//2:,0], x_data[X//2:,1], np.ones(X//2) * 0.5, 'ro')
-    fig1.scatter(x_data[:X//2,0], x_data[:X//2,1], np.ones(X//2) * 0.5, 'bo')
+    fig1.scatter(x_data[X//2:,0], x_data[X//2:,1], y_data[X//2:], 'ro')
+    fig1.scatter(x_data[:X//2,0], x_data[:X//2,1], y_data[:X//2], 'bo')
 
-    fig.colorbar(surf)
     plt.show()
 
 def plot_loss_epoch(correct, loss):
@@ -139,19 +138,26 @@ def training_loop(x, y):
     # plot_grad_epoch(gradEpoch)
     # model = HiddenModel(0.025)
     # model = DeepModel(0.0125)
-    model = DeepDeepModel(0.00125)
+    # model = DeepDeepModel(0.00125)
+    # model = HiddenModelRegular(0.25, 0.00007)
+    model = SimpleModelRegular(0.025, 0.00007)
 
-    print(model.layer1.weights)
-    print(model.layer2.weights)
+    # print(model.layer1.weights)
+    # print(model.layer2.weights)
     # model.init_weights()
 
-    # set initial weights
+
+    print("Data: ")
     for rxy in range(len(x)):
-        model.grad(x[rxy], y[rxy])
+        print(x[rxy], y[rxy])
+
+    # set initial weights
+    # for rxy in range(len(x)):
+    #     model.grad(x[rxy], y[rxy])
 
     correctEpoch = []
     lossEpoch = []
-    for e in range(250):
+    for e in range(25):
 
         # initial pass
         correct = np.zeros(y.shape)
@@ -161,16 +167,22 @@ def training_loop(x, y):
             correct[rxy] = ((y_hat[0] > 0.5) == (y[rxy] == 1)) * 1
 
         # train incorrect points
-        for rxy in np.where(correct < 1)[0]:
-            grads = model.grad(x[rxy], y[rxy])
-            # print(grads)
+        # for rxy in np.where(correct < 1)[0]:
+        #     grads = model.grad(x[rxy], y[rxy])
+        #     # print(grads)
 
         # tempGrad = 0
         # for rxy in range(len(x)):
         #     grads = model.grad(x[rxy], y[rxy])
             # tempGrad += grads[1][0]
         # gradEpoch.append(tempGrad / len(x))
-        
+
+
+        # stochastic gradient descent
+        randPoints = np.random.choice(np.arange(x.shape[0]), int(X * 0.2))
+        for rxy in randPoints:
+            grads = model.grad(x[rxy], y[rxy])
+
 
         correct = np.zeros(y.shape)
         modelLoss = 0
@@ -203,14 +215,13 @@ def training_loop(x, y):
 
     print(model.layer1.weights)
     print(model.layer2.weights)
-    print(model.layer3.weights)
     
     plot_loss_epoch(correctEpoch, lossEpoch)
 
     plot_decision(model)
     # plot_grad_epoch(gradEpoch)
-    plot_3d_plane(model)
-    # plot_3d_plane_points(model, x, y)
+    # plot_3d_plane(model)
+    plot_3d_plane_points(model, x, y_hat)
 
 
 
