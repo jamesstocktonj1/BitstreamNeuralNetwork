@@ -19,54 +19,30 @@ class NeuralLayer:
         L = y - 1 + np.product(1 - (self.weights * x), axis=1)
         L = L.reshape(L.size, 1)
 
-        a = np.product(1 - (self.weights * x), axis=1)
-        b = 1 / (1 - (self.weights * x))
-        c = a.reshape(a.size, 1) * b
+        z = np.product(1 - (self.weights * x), axis=1)
+        c = z.reshape(z.size, 1) * (1 / (1 - (self.weights * x)))
 
         return -2 * L * self.weights * c
 
     def grad_layer(self, x, z):
-        grads = np.zeros((self.output_size, self.input_size))
-        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        z = np.product(1 - (self.weights * x), axis=1)
+        c = z.reshape(z.size, 1) * (1 / (1 - (self.weights * x)))
 
-        for i in range(self.output_size):
-            for j in range(self.input_size):
-
-                grads[i,j] = -1 * self.weights[i,j]
-                for k in range(self.input_size):
-                    if k != j:
-                        grads[i,j] *= 1 - (self.weights[i,k] * x[k])
-
-        for j in range(self.input_size):
-            grads[:,j] *= self.activation_grad(z)
-
-        return grads
+        return self.weights * c * -1
 
     def grad_weight(self, x):
-        grads = np.zeros((self.output_size, self.input_size))
-        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        z = np.product(1 - (self.weights * x), axis=1)
+        c = z.reshape(z.size, 1) * (1 / (1 - (self.weights * x)))
 
-        for i in range(self.output_size):
-            for j in range(self.input_size):
-
-                grads[i,j] = -1 * x[j]
-                for k in range(self.input_size):
-                    if k != j:
-                        grads[i,j] *= 1 - (self.weights[i,k] * x[k])
-        
-        for j in range(self.input_size):
-            grads[:,j] *= self.activation_grad(z)
-
-        return grads
-
+        return x * c * -1
 
     def activation(self, z):
-        return 1 / (1 + np.exp(-8 * (z - 0.5)))
-        # return 1 / (1 + np.exp(-4 * z))
+        # return 1 / (1 + np.exp(-8 * (z - 0.5)))
+        return z
 
     def activation_grad(self, z):
         # return self.activation(z) * (1 - self.activation(z))
-        return z
+        return 1
 
     def call(self, x):
         z = 1 - np.product(1 - (self.weights * x), axis=1)
@@ -106,9 +82,21 @@ def neuron_layer_test():
     exp_grads[0,0] = -1 * a[0] * (1 - (w[0,1] * a[1]))
     exp_grads[0,1] = -1 * a[1] * (1 - (w[0,0] * a[0]))
     exp_grads[1,0] = -1 * a[0] * (1 - (w[1,1] * a[1]))
-    exp_grads[1,1] = -1 * a[1] * (1 - (w[1,0] * a[1]))
+    exp_grads[1,1] = -1 * a[1] * (1 - (w[1,0] * a[0]))
 
     print("\nTesting Grad Weight...")
+    print("Expected: ", exp_grads)
+    print("Got:      ", grads)
+
+    grads = layer.grad_layer(a, b)
+
+    exp_grads = np.zeros((2,2))
+    exp_grads[0,0] = -1 * w[0,0] * (1 - (w[0,1] * a[1]))
+    exp_grads[0,1] = -1 * w[0,1] * (1 - (w[0,0] * a[0]))
+    exp_grads[1,0] = -1 * w[1,0] * (1 - (w[1,1] * a[1]))
+    exp_grads[1,1] = -1 * w[1,1] * (1 - (w[1,0] * a[0]))
+
+    print("\nTesting Grad Layer...")
     print("Expected: ", exp_grads)
     print("Got:      ", grads)
 
