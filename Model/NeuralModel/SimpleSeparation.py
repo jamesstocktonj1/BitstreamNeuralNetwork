@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular
+from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular, SimpleModelRegular
 
 
 X = 250
@@ -139,15 +139,21 @@ def training_loop(x, y):
     # model = HiddenModel(0.025)
     # model = DeepModel(0.0125)
     # model = DeepDeepModel(0.00125)
-    model = HiddenModelRegular(0.25, 0.00007)
+    # model = HiddenModelRegular(0.25, 0.00007)
+    model = SimpleModelRegular(0.025, 0.00007)
 
-    print(model.layer1.weights)
-    print(model.layer2.weights)
+    # print(model.layer1.weights)
+    # print(model.layer2.weights)
     # model.init_weights()
 
-    # set initial weights
+
+    print("Data: ")
     for rxy in range(len(x)):
-        model.grad(x[rxy], y[rxy])
+        print(x[rxy], y[rxy])
+
+    # set initial weights
+    # for rxy in range(len(x)):
+    #     model.grad(x[rxy], y[rxy])
 
     correctEpoch = []
     lossEpoch = []
@@ -209,7 +215,6 @@ def training_loop(x, y):
 
     print(model.layer1.weights)
     print(model.layer2.weights)
-    print(model.layer3.weights)
     
     plot_loss_epoch(correctEpoch, lossEpoch)
 
