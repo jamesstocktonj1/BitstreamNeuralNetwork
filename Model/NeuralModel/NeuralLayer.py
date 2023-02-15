@@ -25,6 +25,8 @@ class NeuralLayer:
         
         for j in range(self.input_size):
             grads[:,j] *= self.activation_grad(z)
+
+        grads = grads.sum(axis=0)
         
         return grads
 
