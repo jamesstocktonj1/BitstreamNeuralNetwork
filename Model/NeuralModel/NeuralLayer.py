@@ -19,30 +19,41 @@ class NeuralLayer:
         L = y - 1 + np.product(1 - (self.weights * x), axis=1)
         L = L.reshape(L.size, 1)
 
-        z = np.product(1 - (self.weights * x), axis=1)
-        c = z.reshape(z.size, 1) * (1 / (1 - (self.weights * x)))
+        b = np.product(1 - (self.weights * x), axis=1)
+        c = b.reshape(b.size, 1) * (1 / (1 - (self.weights * x)))
+
+        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        z = self.activation_grad(z)
+        z = z.reshape(z.size, 1)
 
         return -2 * L * self.weights * c
 
     def grad_layer(self, x, z):
-        z = np.product(1 - (self.weights * x), axis=1)
-        c = z.reshape(z.size, 1) * (1 / (1 - (self.weights * x)))
+        b = np.product(1 - (self.weights * x), axis=1)
+        c = b.reshape(b.size, 1) * (1 / (1 - (self.weights * x)))
 
-        return self.weights * c * -1
+        z = self.activation_grad(z)
+        z = z.reshape(z.size, 1)
+
+        return -1 * self.weights * c * z
 
     def grad_weight(self, x):
-        z = np.product(1 - (self.weights * x), axis=1)
-        c = z.reshape(z.size, 1) * (1 / (1 - (self.weights * x)))
+        b = np.product(1 - (self.weights * x), axis=1)
+        c = b.reshape(b.size, 1) * (1 / (1 - (self.weights * x)))
 
-        return x * c * -1
+        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        z = self.activation_grad(z)
+        z = z.reshape(z.size, 1)
+
+        return -1 * x * c * z
 
     def activation(self, z):
-        # return 1 / (1 + np.exp(-8 * (z - 0.5)))
-        return z
+        return 1 / (1 + np.exp(-8 * (z - 0.5)))
+        # return z
 
     def activation_grad(self, z):
-        # return self.activation(z) * (1 - self.activation(z))
-        return 1
+        return self.activation(z) * (1 - self.activation(z))
+        # return np.ones((z.size))
 
     def call(self, x):
         z = 1 - np.product(1 - (self.weights * x), axis=1)
