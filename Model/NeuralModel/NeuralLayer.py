@@ -17,18 +17,10 @@ class NeuralLayer:
         self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
 
 
-    def grad_loss(self, x, y):
-        L = y - 1 + np.product(1 - (self.weights * x), axis=1)
-        L = L.reshape(L.size, 1)
+    def grad_loss(self, z, y):
+        L = y - z
 
-        b = np.product(1 - (self.weights * x), axis=1)
-        c = b.reshape(b.size, 1) * (1 / (1 - (self.weights * x)))
-
-        z = 1 - np.product(1 - (self.weights * x), axis=1)
-        z = self.activation_grad(z)
-        z = z.reshape(z.size, 1)
-
-        return -2 * L * self.weights * c
+        return -2 * L
 
     def grad_layer(self, x, z):
         b = np.product(1 - (self.weights * x), axis=1)
@@ -37,7 +29,7 @@ class NeuralLayer:
         z = self.activation_grad(z)
         z = z.reshape(z.size, 1)
 
-        return -1 * self.weights * c * z
+        return self.weights * c * z
 
     def grad_weight(self, x):
         b = np.product(1 - (self.weights * x), axis=1)
@@ -47,7 +39,7 @@ class NeuralLayer:
         z = self.activation_grad(z)
         z = z.reshape(z.size, 1)
 
-        return -1 * x * c * z
+        return x * c * z
 
     def activation(self, z):
         if self.no_activation:
@@ -120,11 +112,14 @@ def neuron_layer_test():
 
     grads = layer.grad_loss(a, b)
 
-    exp_grads = np.zeros((2,2))
-    exp_grads[0,0] = -2 * w[0,0] * (1 - (w[0,1] * a[1])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
-    exp_grads[0,1] = -2 * w[0,1] * (1 - (w[0,0] * a[0])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
-    exp_grads[1,0] = -2 * w[1,0] * (1 - (w[1,1] * a[1])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
-    exp_grads[1,1] = -2 * w[1,1] * (1 - (w[1,0] * a[0])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
+    exp_grads = np.zeros((2))
+    # exp_grads[0,0] = -2 * w[0,0] * (1 - (w[0,1] * a[1])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
+    # exp_grads[0,1] = -2 * w[0,1] * (1 - (w[0,0] * a[0])) * (b[0] - 1 + ((1 - (w[0,0] * a[0])) * (1 - (w[0,1] * a[1]))))
+    # exp_grads[1,0] = -2 * w[1,0] * (1 - (w[1,1] * a[1])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
+    # exp_grads[1,1] = -2 * w[1,1] * (1 - (w[1,0] * a[0])) * (b[1] - 1 + ((1 - (w[1,0] * a[0])) * (1 - (w[1,1] * a[1]))))
+
+    exp_grads[0] = -2 * (a[0] - b[0])
+    exp_grads[1] = -2 * (a[1] - b[1])
 
     print("\nTesting Grad Loss...")
     print("Expected: ", exp_grads)
@@ -140,5 +135,69 @@ def neuron_layer_test():
     print("Expected: ", exp_y)
     print("Got:      ", y)
 
+
+def neuron_layer_complex_test():
+
+    layer = NeuralLayer(3, 2)
+    layer.no_activation = True
+    
+    x = np.random.randint(0, 10, size=3) / 10
+    y = np.random.randint(0, 10, size=2) / 10
+    w = np.random.randint(0, 10, size=(2,3)) / 10
+
+    layer.weights = w
+
+    z = layer.call(x)
+
+    # test loss grad
+    exp_loss_grad = np.zeros((2))
+    loss_grad = layer.grad_loss(z, y)
+
+    exp_loss_grad[0] = -2 * (y[0] - z[0])
+    exp_loss_grad[1] = -2 * (y[1] - z[1])
+
+    print("Testing Grad Loss...")
+    print("Expected: ", exp_loss_grad)
+    print("Got:      ", loss_grad)
+
+
+    # test layer grad
+    exp_layer_grad = np.zeros((2, 3))
+    layer_grad = layer.grad_layer(x, z)
+
+    exp_layer_grad[0,0] = w[0,0] * (1 - (x[1] * w[0,1])) * (1 - (x[2] * w[0,2]))
+    exp_layer_grad[0,1] = w[0,1] * (1 - (x[0] * w[0,0])) * (1 - (x[2] * w[0,2]))
+    exp_layer_grad[0,2] = w[0,2] * (1 - (x[0] * w[0,0])) * (1 - (x[1] * w[0,1]))
+
+    exp_layer_grad[1,0] = w[1,0] * (1 - (x[1] * w[1,1])) * (1 - (x[2] * w[1,2]))
+    exp_layer_grad[1,1] = w[1,1] * (1 - (x[0] * w[1,0])) * (1 - (x[2] * w[1,2]))
+    exp_layer_grad[1,2] = w[1,2] * (1 - (x[0] * w[1,0])) * (1 - (x[1] * w[1,1]))
+
+    print("Testing Grad Layer...")
+    print("Expected: ", exp_layer_grad)
+    print("Got:      ", layer_grad)
+
+
+    # test weight grad
+    exp_weight_grad = np.zeros((2, 3))
+    weight_grad = layer.grad_weight(x)
+
+    exp_weight_grad[0,0] = x[0] * (1 - (x[1] * w[0,1])) * (1 - (x[2] * w[0,2]))
+    exp_weight_grad[0,1] = x[1] * (1 - (x[0] * w[0,0])) * (1 - (x[2] * w[0,2]))
+    exp_weight_grad[0,2] = x[2] * (1 - (x[0] * w[0,0])) * (1 - (x[1] * w[0,1]))
+
+    exp_weight_grad[1,0] = x[0] * (1 - (x[1] * w[1,1])) * (1 - (x[2] * w[1,2]))
+    exp_weight_grad[1,1] = x[1] * (1 - (x[0] * w[1,0])) * (1 - (x[2] * w[1,2]))
+    exp_weight_grad[1,2] = x[2] * (1 - (x[0] * w[1,0])) * (1 - (x[1] * w[1,1]))
+
+    print("Testing Grad Weight...")
+    print("Expected: ", exp_weight_grad)
+    print("Got:      ", weight_grad)
+
+
+
+
+
 if __name__ == "__main__":
-    neuron_layer_test()
+    # neuron_layer_test()
+    neuron_layer_complex_test()
