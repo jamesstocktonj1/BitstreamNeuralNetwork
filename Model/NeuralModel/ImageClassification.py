@@ -34,16 +34,16 @@ class RegularisedModel:
         self.layer2 = NeuralLayer(128, 127)
         self.layer3 = NeuralLayer(127, 10)
 
-        self.layer1.init_weights(0.1)
-        self.layer2.init_weights(0.1)
-        self.layer3.init_weights(0.1)
+        self.layer1.init_weights(0.2)
+        self.layer2.init_weights(0.2)
+        self.layer3.init_weights(0.2)
 
     def grad(self, x, y):
         z1 = self.layer1.call(x)
         z2 = self.layer2.call(z1)
         y_hat = self.layer3.call(z2)
 
-        dLoss = self.layer3.grad_loss(z2, y)
+        dLoss = self.layer3.grad_loss(y_hat, y)
         dLayer3 = self.layer3.grad_layer(z2, y_hat)
         dWeight3 = self.layer3.grad_weight(z2)
 
@@ -52,23 +52,11 @@ class RegularisedModel:
 
         dWeight1 = self.layer1.grad_weight(x)
 
-        # print("Weight: ", dWeight1)
 
-        print(dLoss.shape)
-        print(dLayer3.shape)
-        print(dWeight3.shape)
-        print(dLayer2.shape)
-        print(dWeight2.shape)
-        print(dWeight1.shape)
-
-        print(self.layer3.weights.shape)
-        print(self.layer2.weights.shape)
-        print(self.layer1.weights.shape)
-
-
-        dW3 = dLoss * dWeight3
-        dW2 = np.dot(dLoss * dLayer3, dWeight2)
-        dW1 = np.dot(np.dot(dLoss * dLayer3, dLayer2), dWeight1)
+        dW3 = dLoss.reshape(10,1) * dWeight3
+        dW2 = (dLoss @ dLayer3).reshape(127, 1) * dWeight2
+        dW1 = ((dLoss @ dLayer3) @ dLayer2).reshape(128, 1) * dWeight1
+        
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
@@ -91,7 +79,7 @@ class RegularisedModel:
         return self.layer3.call(z)
 
 
-model = RegularisedModel(0.025, 0.00007)
+model = RegularisedModel(0.025, 0)
 
 
 def training_loop():
@@ -100,15 +88,17 @@ def training_loop():
     for e in range(25):
 
         # stochastic gradient descent
-        randPoints = np.random.choice(np.arange(x_train.shape[0]), 100)
+        randPoints = np.random.choice(np.arange(x_train.shape[0]), 10)
         for rxy in randPoints:
-            print(x_train[rxy])
+            # print(x_train[rxy])
             model.grad(x_train[rxy], y_train_data[rxy])
 
         # calculate model loss
         modelLoss = 0
         for rxy in range(x_train.shape[0]):
             modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
+
+        # print(model.layer1.weights)
 
         print("Loss: {}".format(modelLoss))
     
