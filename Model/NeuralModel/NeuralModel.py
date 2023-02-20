@@ -312,8 +312,11 @@ class SimpleModelRegular:
         self.training_rate = R
         self.regularisation = L
 
-        self.layer1 = NeuralLayer(2, 2)
-        self.layer2 = NeuralLayer(2, 1)
+        self.layer1 = NeuralLayer(2, 3)
+        self.layer2 = NeuralLayer(3, 1)
+
+        # self.layer1.no_activation = True
+        # self.layer2.no_activation = True
 
         self.layer1.init_weights(0.1)
         self.layer2.init_weights(0.1)
@@ -348,3 +351,35 @@ class SimpleModelRegular:
     def call(self, x):
         z = self.layer1.call(x)
         return self.layer2.call(z)
+
+class Perceptron:
+
+    def __init__(self, R, L):
+        self.training_rate = R
+        self.regularisation = L
+
+        self.layer = NeuralLayer(2, 1)
+        self.layer.init_weights(0.1)
+
+    def grad(self, x, y):
+        z = self.layer.call(x)
+
+        dLoss = self.layer.grad_loss(z, y)
+        dLayer = self.layer.grad_layer(x, y)
+        dWeight = self.layer.grad_weight(x)
+
+        dW = dLoss * dWeight
+
+        self.layer.weights -= self.training_rate * dW
+        self.layer.weights -= self.regularisation * self.layer.weights
+        self.layer.weights = np.clip(self.layer.weights, 0.0, 1.0)
+
+        return dW
+
+    def loss(self, x, y):
+        y_hat = self.call(x)
+
+        return (y - y_hat) ** 2
+
+    def call(self, x):
+        return self.layer.call(x)
