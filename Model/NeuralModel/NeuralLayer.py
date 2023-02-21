@@ -20,7 +20,7 @@ class NeuralLayer:
     def grad_loss(self, z, y):
         L = y - z
 
-        return -2 * L
+        return (-2 * L).reshape(L.shape + (1, ))
 
     def grad_layer(self, x, z):
         b = np.product(1 - (self.weights * x), axis=1)
