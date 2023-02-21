@@ -21,7 +21,7 @@ class SimpleModel:
         z = self.layer1.call(x)
         y_hat = self.layer2.call(z)
         
-        dLoss = self.layer2.grad_loss(z, y)
+        dLoss = self.layer2.grad_loss(y_hat, y)
         dLayer2 = self.layer2.grad_layer(z, y_hat)
         dWeight2 = self.layer2.grad_weight(z)
 
@@ -71,7 +71,7 @@ class HiddenModel:
         z2 = self.layer2.call(z1)
         y_hat = self.layer3.call(z2)
 
-        dLoss = self.layer3.grad_loss(z2, y)
+        dLoss = self.layer3.grad_loss(y_hat, y)
         dLayer3 = self.layer3.grad_layer(z2, y_hat)
         dWeight3 = self.layer3.grad_weight(z2)
 
@@ -130,7 +130,7 @@ class DeepModel:
         z3 = self.layer3.call(z2)
         y_hat = self.layer4.call(z3)
 
-        dLoss = self.layer4.grad_loss(z3, y)
+        dLoss = self.layer4.grad_loss(y_hat, y)
         dLayer4 = self.layer4.grad_layer(z3, y_hat)
         dWeight4 = self.layer4.grad_weight(z3)
 
@@ -176,8 +176,9 @@ class DeepModel:
 
 class DeepDeepModel:
 
-    def __init__(self, R):
+    def __init__(self, R, L):
         self.training_rate = R
+        self.regularisation = L
 
         self.layer1 = NeuralLayer(2, 5)
         self.layer2 = NeuralLayer(5, 4)
@@ -199,7 +200,7 @@ class DeepDeepModel:
         z4 = self.layer4.call(z3)
         y_hat = self.layer5.call(z4)
 
-        dLoss = self.layer5.grad_loss(z4, y)
+        dLoss = self.layer5.grad_loss(y_hat, y)
         dLayer5 = self.layer5.grad_layer(z4, y_hat)
         dWeight5 = self.layer5.grad_weight(z4)
 
@@ -222,14 +223,19 @@ class DeepDeepModel:
         dW1 = np.dot(np.dot(np.dot(np.dot(dLoss * dLayer5, dLayer4), dLayer3), dLayer2), dWeight1)
 
         self.layer1.weights -= self.training_rate * dW1
+        self.layer1.weights -= self.regularisation * self.layer1.weights
         self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
         self.layer2.weights -= self.training_rate * dW2
+        self.layer2.weights -= self.regularisation * self.layer2.weights
         self.layer2.weights = np.clip(self.layer2.weights, 0.0, 1.0)
         self.layer3.weights -= self.training_rate * dW3
+        self.layer3.weights -= self.regularisation * self.layer3.weights
         self.layer3.weights = np.clip(self.layer3.weights, 0.0, 1.0)
         self.layer4.weights -= self.training_rate * dW4
+        self.layer4.weights -= self.regularisation * self.layer4.weights
         self.layer4.weights = np.clip(self.layer4.weights, 0.0, 1.0)
         self.layer5.weights -= self.training_rate * dW5
+        self.layer5.weights -= self.regularisation * self.layer5.weights
         self.layer5.weights = np.clip(self.layer5.weights, 0.0, 1.0)
 
         return dW4, dW3, dW2, dW1
@@ -266,7 +272,7 @@ class HiddenModelRegular:
         z2 = self.layer2.call(z1)
         y_hat = self.layer3.call(z2)
 
-        dLoss = self.layer3.grad_loss(z2, y)
+        dLoss = self.layer3.grad_loss(y_hat, y)
         dLayer3 = self.layer3.grad_layer(z2, y_hat)
         dWeight3 = self.layer3.grad_weight(z2)
 
@@ -325,14 +331,14 @@ class SimpleModelRegular:
         z = self.layer1.call(x)
         y_hat = self.layer2.call(z)
         
-        dLoss = self.layer2.grad_loss(z, y)
+        dLoss = self.layer2.grad_loss(y_hat, y)
         dLayer2 = self.layer2.grad_layer(z, y_hat)
         dWeight2 = self.layer2.grad_weight(z)
 
         dWeight1 = self.layer1.grad_weight(x)
 
         dW2 = dLoss * dWeight2
-        dW1 = np.dot(dLoss * dLayer2, dWeight1)
+        dW1 = (dLoss @ dLayer2).T * dWeight1
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
@@ -362,10 +368,10 @@ class Perceptron:
         self.layer.init_weights(0.1)
 
     def grad(self, x, y):
-        z = self.layer.call(x)
+        y_hat = self.layer.call(x)
 
-        dLoss = self.layer.grad_loss(z, y)
-        dLayer = self.layer.grad_layer(x, y)
+        dLoss = self.layer.grad_loss(y_hat, y)
+        dLayer = self.layer.grad_layer(x, y_hat)
         dWeight = self.layer.grad_weight(x)
 
         dW = dLoss * dWeight
