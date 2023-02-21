@@ -53,10 +53,10 @@ class RegularisedModel:
         dWeight1 = self.layer1.grad_weight(x)
 
 
-        dW3 = dLoss.reshape(10,1) * dWeight3
-        dW2 = (dLoss @ dLayer3).reshape(127, 1) * dWeight2
-        dW1 = ((dLoss @ dLayer3) @ dLayer2).reshape(128, 1) * dWeight1
-        
+        dW3 = dLoss * dWeight3
+        dW2 = (dLoss.T @ dLayer3).T * dWeight2
+        dW1 = ((dLoss.T @ dLayer3) @ dLayer2).T * dWeight1
+
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
