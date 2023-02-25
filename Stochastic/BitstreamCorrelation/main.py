@@ -27,11 +27,13 @@ def generatre_bitstream_matrix():
 
 def compare_correlation(bitstreamMatrix):
 
-    corMatrix = np.zeros((256, 256))
+    X = 256
 
-    for i in range(256):
+    corMatrix = np.zeros((X, X))
 
-        for j in range(256):
+    for i in range(X):
+
+        for j in range(X):
             # xnor the two bitstreams
             cor = (bitstreamMatrix[i] == bitstreamMatrix[j]) * 1
             corMatrix[i,j] = cor.sum() / cor.size
@@ -54,6 +56,19 @@ def plot_correlation_matrix(correlationMatrix):
     plt.savefig("images/bitstream_correlation.png")
     plt.show()
 
+def plot_compatability(correlationMatrix):
+    fig = plt.figure()
+
+    corAvg = (correlationMatrix ** 2).sum(axis=1) / correlationMatrix.shape[0]
+
+    print(corAvg.min())
+    print(corAvg.max())
+
+    plt.bar(np.arange(0, correlationMatrix.shape[0]), corAvg)
+
+    plt.savefig("images/bitstream_seed_quality.png")
+    plt.show()
+
 
 def main():
     correlationMatrix = np.random.randn(5, 5)
@@ -61,15 +76,16 @@ def main():
     bitstreamMatrix = generatre_bitstream_matrix()
     correlationMatrix = compare_correlation(bitstreamMatrix)
 
-    corMax = correlationMatrix.max()
-    corMin = correlationMatrix.min()
+    corMax = (correlationMatrix.max() - 0.5)
+    corMin = (correlationMatrix.min() - 0.5)
 
-    corAvr = correlationMatrix.sum() / (256 * 256)
+    corAvr = ((correlationMatrix.sum() / (256 * 256)) - 0.5)
 
     print("Largest Positive Correlation: {}".format(corMax))
     print("Largest Negative Correlation: {}".format(corMin))
     print("Average Correlation: {}".format(corAvr))
 
+    plot_compatability(correlationMatrix)
     plot_correlation_matrix(correlationMatrix)
 
 
