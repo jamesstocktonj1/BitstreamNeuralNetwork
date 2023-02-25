@@ -43,6 +43,21 @@ def compare_correlation(bitstreamMatrix):
 
     return corMatrix
 
+def plot_seed_correlation(correlationMatrix, seed):
+    fig = plt.figure()
+
+    plt.bar(np.arange(correlationMatrix.shape[0]), (correlationMatrix[seed] - 0.5))
+
+    plt.title("Bitstream Correlation (Seed: {})".format(seed))
+    plt.savefig("images/bitstream_correlation_seed_{}.png".format(seed))
+
+def plot_seed_correlation_square(correlationMatrix, seed):
+    fig = plt.figure()
+
+    plt.bar(np.arange(correlationMatrix.shape[0]), (correlationMatrix[seed] - 0.5) ** 2)
+
+    plt.title("Bitstream Correlation Squared (Seed: {})".format(seed))
+    plt.savefig("images/bitstream_correlation_square_seed_{}.png".format(seed))
 
 def plot_correlation_matrix(correlationMatrix):
     fig = plt.figure()
@@ -87,6 +102,8 @@ def main():
 
     plot_compatability(correlationMatrix)
     plot_correlation_matrix(correlationMatrix)
+    plot_seed_correlation(correlationMatrix, 84)
+    plot_seed_correlation_square(correlationMatrix, 84)
 
 
 if __name__ == "__main__":
