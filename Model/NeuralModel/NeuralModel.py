@@ -281,13 +281,11 @@ class HiddenModelRegular:
 
         dWeight1 = self.layer1.grad_weight(x)
 
-        dWeight1 = self.layer1.grad_weight(x)
-
         # print("Weight: ", dWeight1)
 
         dW3 = dLoss * dWeight3
-        dW2 = np.dot(dLoss * dLayer3, dWeight2)
-        dW1 = np.dot(np.dot(dLoss * dLayer3, dLayer2), dWeight1)
+        dW2 = (dLoss @ dLayer3).T * dWeight2
+        dW1 = ((dLoss @ dLayer3) @ dLayer2).T * dWeight1
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
