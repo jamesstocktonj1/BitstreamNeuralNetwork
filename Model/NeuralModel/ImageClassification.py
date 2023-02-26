@@ -1,6 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 
 from NeuralLayer import NeuralLayer
 
@@ -80,8 +81,9 @@ class RegularisedModel:
         return self.layer3.call(z)
 
 
-model = RegularisedModel(2.5, 0)
+model = RegularisedModel(25, 0)
 
+status = {}
 
 
 def plot_loss_epoch(loss):
@@ -128,6 +130,20 @@ def training_loop():
 
         print("Epoch {}, Loss: {}".format(e, modelLoss))
         lossEpoch.append(modelLoss)
+
+        # add epoch information to file
+        epochStatus = {}
+        epochStatus["layer1"] = model.layer1.weights.tolist()
+        epochStatus["layer2"] = model.layer2.weights.tolist()
+        epochStatus["layer3"] = model.layer3.weights.tolist()
+        epochStatus["loss"] = modelLoss
+
+        status["epoch{}".format(e)] = epochStatus
+        status["losses"] = lossEpoch
+
+        with open("data/image.json", "w") as f:
+            json_obj = json.dumps(status, indent=4)
+            f.write(json_obj)
     
     plot_loss_epoch(lossEpoch)
 
