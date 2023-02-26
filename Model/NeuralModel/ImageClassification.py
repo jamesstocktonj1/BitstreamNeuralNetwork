@@ -34,9 +34,9 @@ class RegularisedModel:
         self.layer2 = NeuralLayer(128, 127)
         self.layer3 = NeuralLayer(127, 10)
 
-        self.layer1.init_weights(0.2)
-        self.layer2.init_weights(0.2)
-        self.layer3.init_weights(0.2)
+        self.layer1.init_xavier(0.1)
+        self.layer2.init_xavier(0.1)
+        self.layer3.init_xavier(0.1)
 
     def grad(self, x, y):
         z1 = self.layer1.call(x)
