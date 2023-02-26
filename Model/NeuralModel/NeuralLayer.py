@@ -16,6 +16,9 @@ class NeuralLayer:
     def init_weights(self, u):
         self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
 
+    def init_xavier(self, u):
+        std = u * np.sqrt(2 / (self.input_size + self.output_size))
+        self.weights = np.abs(std * np.random.randn(self.output_size, self.input_size)) 
 
     def grad_loss(self, z, y):
         L = y - z
@@ -23,8 +26,15 @@ class NeuralLayer:
         return (-2 * L).reshape(L.shape + (1, ))
 
     def grad_layer(self, x, z):
-        b = np.product(1 - (self.weights * x), axis=1)
-        c = b.reshape(b.size, 1) * np.reciprocal(1 - (self.weights * x))
+        
+        def else_function(a):
+            def everything_else(b):
+                return np.product(a[np.where(a != b)])
+
+            f = np.vectorize(everything_else)
+            return f(a)
+
+        c = np.apply_along_axis(else_function, 1, 1 - (self.weights * x))
 
         z = self.activation_grad(z)
         z = z.reshape(z.size, 1)
@@ -32,8 +42,15 @@ class NeuralLayer:
         return self.weights * c * z
 
     def grad_weight(self, x):
-        b = np.product(1 - (self.weights * x), axis=1)
-        c = b.reshape(b.size, 1) * np.reciprocal(1 - (self.weights * x))
+
+        def else_function(a):
+            def everything_else(b):
+                return np.product(a[np.where(a != b)])
+
+            f = np.vectorize(everything_else)
+            return f(a)
+
+        c = np.apply_along_axis(else_function, 1, 1 - (self.weights * x))
 
         z = 1 - np.product(1 - (self.weights * x), axis=1)
         z = self.activation_grad(z)
