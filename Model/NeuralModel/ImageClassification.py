@@ -1,4 +1,5 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
 import numpy as np
 
 from NeuralLayer import NeuralLayer
@@ -79,8 +80,19 @@ class RegularisedModel:
         return self.layer3.call(z)
 
 
-model = RegularisedModel(0.025, 0)
+model = RegularisedModel(0.25, 0)
 
+
+
+def plot_loss_epoch(loss):
+    plt.figure()
+
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+    plt.plot(np.arange(len(loss)), loss)
+
+    plt.savefig("images/image_epoch_loss.png")
+    plt.close()
 
 def training_loop():
     
@@ -101,7 +113,9 @@ def training_loop():
         # print(model.layer1.weights)
 
         print("Loss: {}".format(modelLoss))
+        lossEpoch.append(modelLoss)
     
+    plot_loss_epoch(lossEpoch)
 
 
 def testing_loop():
