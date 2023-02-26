@@ -80,7 +80,7 @@ class RegularisedModel:
         return self.layer3.call(z)
 
 
-model = RegularisedModel(0.25, 0)
+model = RegularisedModel(2.5, 0)
 
 
 
@@ -94,6 +94,17 @@ def plot_loss_epoch(loss):
     plt.savefig("images/image_epoch_loss.png")
     plt.close()
 
+
+def train_function(index):
+    return model.grad(x_train[index], y_train_data[index])
+
+train_point = np.vectorize(train_function)
+
+def loss_function(index):
+    return model.loss(x_train[index], y_train_data[index])
+
+get_loss = np.vectorize(loss_function)
+
 def training_loop():
     
     lossEpoch = []
@@ -101,18 +112,21 @@ def training_loop():
 
         # stochastic gradient descent
         randPoints = np.random.choice(np.arange(x_train.shape[0]), 10)
-        for rxy in randPoints:
-            # print(x_train[rxy])
-            model.grad(x_train[rxy], y_train_data[rxy])
+        # for rxy in randPoints:
+        #     # print(x_train[rxy])
+        #     model.grad(x_train[rxy], y_train_data[rxy])
+
+        train_point(randPoints)
 
         # calculate model loss
-        modelLoss = 0
-        for rxy in range(x_train.shape[0]):
-            modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
+        # modelLoss = 0
+        # for rxy in range(x_train.shape[0]):
+        #     modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
 
-        # print(model.layer1.weights)
+        modelLoss = get_loss(np.arange(x_train.shape[0])).sum()
+        modelLoss = modelLoss / x_train.shape[0]
 
-        print("Loss: {}".format(modelLoss))
+        print("Epoch {}, Loss: {}".format(e, modelLoss))
         lossEpoch.append(modelLoss)
     
     plot_loss_epoch(lossEpoch)
@@ -120,8 +134,13 @@ def training_loop():
 
 def testing_loop():
 
-    correct = np.zeros(y_test.shape[0])
+    y_hat = model.call(x_test[0])
+    y = y_test_data[0]
 
+    print("Exp {}".format(y))
+    print("Got {}".format(y_hat))
 
 if __name__ == "__main__":
     training_loop()
+
+    testing_loop()
