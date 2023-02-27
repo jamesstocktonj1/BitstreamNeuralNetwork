@@ -1,5 +1,7 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
 import numpy as np
+import json
 
 from NeuralLayer import NeuralLayer
 
@@ -34,16 +36,16 @@ class RegularisedModel:
         self.layer2 = NeuralLayer(128, 127)
         self.layer3 = NeuralLayer(127, 10)
 
-        self.layer1.init_weights(0.1)
-        self.layer2.init_weights(0.1)
-        self.layer3.init_weights(0.1)
+        self.layer1.init_xavier(0.1)
+        self.layer2.init_xavier(0.1)
+        self.layer3.init_xavier(0.1)
 
     def grad(self, x, y):
         z1 = self.layer1.call(x)
         z2 = self.layer2.call(z1)
         y_hat = self.layer3.call(z2)
 
-        dLoss = self.layer3.grad_loss(z2, y)
+        dLoss = self.layer3.grad_loss(y_hat, y)
         dLayer3 = self.layer3.grad_layer(z2, y_hat)
         dWeight3 = self.layer3.grad_weight(z2)
 
@@ -52,23 +54,11 @@ class RegularisedModel:
 
         dWeight1 = self.layer1.grad_weight(x)
 
-        # print("Weight: ", dWeight1)
-
-        print(dLoss.shape)
-        print(dLayer3.shape)
-        print(dWeight3.shape)
-        print(dLayer2.shape)
-        print(dWeight2.shape)
-        print(dWeight1.shape)
-
-        print(self.layer3.weights.shape)
-        print(self.layer2.weights.shape)
-        print(self.layer1.weights.shape)
-
 
         dW3 = dLoss * dWeight3
-        dW2 = np.dot(dLoss * dLayer3, dWeight2)
-        dW1 = np.dot(np.dot(dLoss * dLayer3, dLayer2), dWeight1)
+        dW2 = (dLoss.T @ dLayer3).T * dWeight2
+        dW1 = ((dLoss.T @ dLayer3) @ dLayer2).T * dWeight1
+
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
@@ -91,8 +81,31 @@ class RegularisedModel:
         return self.layer3.call(z)
 
 
-model = RegularisedModel(0.025, 0.00007)
+model = RegularisedModel(25, 0)
 
+status = {}
+
+
+def plot_loss_epoch(loss):
+    plt.figure()
+
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+    plt.plot(np.arange(len(loss)), loss)
+
+    plt.savefig("images/image_epoch_loss.png")
+    plt.close()
+
+
+def train_function(index):
+    return model.grad(x_train[index], y_train_data[index])
+
+train_point = np.vectorize(train_function)
+
+def loss_function(index):
+    return model.loss(x_train[index], y_train_data[index])
+
+get_loss = np.vectorize(loss_function)
 
 def training_loop():
     
@@ -100,24 +113,50 @@ def training_loop():
     for e in range(25):
 
         # stochastic gradient descent
-        randPoints = np.random.choice(np.arange(x_train.shape[0]), 100)
-        for rxy in randPoints:
-            print(x_train[rxy])
-            model.grad(x_train[rxy], y_train_data[rxy])
+        randPoints = np.random.choice(np.arange(x_train.shape[0]), 10)
+        # for rxy in randPoints:
+        #     # print(x_train[rxy])
+        #     model.grad(x_train[rxy], y_train_data[rxy])
+
+        train_point(randPoints)
 
         # calculate model loss
-        modelLoss = 0
-        for rxy in range(x_train.shape[0]):
-            modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
+        # modelLoss = 0
+        # for rxy in range(x_train.shape[0]):
+        #     modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
 
-        print("Loss: {}".format(modelLoss))
+        modelLoss = get_loss(np.arange(x_train.shape[0])).sum()
+        modelLoss = modelLoss / x_train.shape[0]
+
+        print("Epoch {}, Loss: {}".format(e, modelLoss))
+        lossEpoch.append(modelLoss)
+
+        # add epoch information to file
+        epochStatus = {}
+        epochStatus["layer1"] = model.layer1.weights.tolist()
+        epochStatus["layer2"] = model.layer2.weights.tolist()
+        epochStatus["layer3"] = model.layer3.weights.tolist()
+        epochStatus["loss"] = modelLoss
+
+        status["epoch{}".format(e)] = epochStatus
+        status["losses"] = lossEpoch
+
+        with open("data/image.json", "w") as f:
+            json_obj = json.dumps(status, indent=4)
+            f.write(json_obj)
     
+    plot_loss_epoch(lossEpoch)
 
 
 def testing_loop():
 
-    correct = np.zeros(y_test.shape[0])
+    y_hat = model.call(x_test[0])
+    y = y_test_data[0]
 
+    print("Exp {}".format(y))
+    print("Got {}".format(y_hat))
 
 if __name__ == "__main__":
     training_loop()
+
+    testing_loop()
