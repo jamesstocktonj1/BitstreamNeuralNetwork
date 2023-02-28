@@ -5,11 +5,27 @@ def bs_sum(x):
     return 1 - np.product(1 - x)
 
 
+def softmax(x):
+    y = np.zeros((x.shape[-1]))
+    x_e = np.exp(-1 * (1 - x))
+
+    for i in range(x.shape[-1]):
+
+        e_sum = 1
+        for j in range(x.shape[-1]):
+            if i != j:
+                e_sum *= (1 - x[j])
+
+        e_sum = 1 - e_sum
+
+        y[i] = x_e[i] / (x_e[i] + e_sum)
+
+    return y * 0.8
 
 
 def main():
 
-    x = np.random.randint(0,100, size=(3)) / 100
+    x = np.random.randint(0,100, size=(5)) / 100
 
     xe = np.exp(x)
     y = xe / xe.sum()
@@ -18,16 +34,7 @@ def main():
     xe_hat = np.exp(-1 * (1 - x))
     y_hat = xe_hat / xe_hat.sum()
     
-    y_hat_hat = np.zeros((3))
-    for i in range(3):
-        den = 1
-        for j in range(3):
-            if i != j:
-                den *= (1 - xe_hat[j])
-        den = 1 - den
-        y_hat_hat[i] = xe_hat[i] / (xe_hat[i] + den)
-    y_hat_hat *= 0.8
-    # y_hat_hat = 1 - y_hat_hat
+    y_hat_hat = softmax(x)
 
     print("Input:   {}".format(x))
     print("Softmax: {}\t{}".format(y, y.sum()))
