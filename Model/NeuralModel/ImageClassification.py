@@ -7,6 +7,14 @@ from NeuralLayer import NeuralLayer
 
 
 
+# PARAMETERS
+LEARNING_RATE = 1.25
+NORMALISATION = 0.007
+EPOCH_COUNT = 2500
+BATCH_SIZE = 250
+WEIGHTS_PARAMETER = 0.15
+
+
 mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
@@ -36,9 +44,10 @@ class RegularisedModel:
         self.layer2 = NeuralLayer(128, 127)
         self.layer3 = NeuralLayer(127, 10)
 
-        self.layer1.init_xavier(0.1)
-        self.layer2.init_xavier(0.1)
-        self.layer3.init_xavier(0.1)
+    def init_weights(self, u):
+        self.layer1.init_xavier(u)
+        self.layer2.init_xavier(u)
+        self.layer3.init_xavier(u)
 
     def grad(self, x, y):
         z1 = self.layer1.call(x)
@@ -81,9 +90,51 @@ class RegularisedModel:
         return self.layer3.call(z)
 
 
-model = RegularisedModel(25, 0)
+model = RegularisedModel(LEARNING_RATE, NORMALISATION)
 
-status = {}
+
+status = {
+    "losses": [],
+    "epochs": []
+}
+
+def save_json(name):
+    with open("data/image_{}.json".format(name), "w") as f:
+        json_obj = json.dumps(status, indent=4)
+        f.write(json_obj)
+
+
+def save_parameters():
+    
+    modelInfo = {}
+    modelInfo["name"] = "Image Classification"
+    modelInfo["learning_rate"] = LEARNING_RATE
+    modelInfo["normalisation_rate"] = NORMALISATION
+    modelInfo["epoch_count"] = EPOCH_COUNT
+    modelInfo["batch_size"] = BATCH_SIZE
+    modelInfo["xavier_parameter"] = WEIGHTS_PARAMETER
+
+    status["info"] = modelInfo
+
+    save_json("info")
+
+def save_status(modelLoss, epoch):
+
+    # add epoch information to file
+    epochStatus = {}
+    epochStatus["info"] = "Epoch {}".format(epoch)
+    epochStatus["layer1"] = model.layer1.weights.tolist()
+    epochStatus["layer2"] = model.layer2.weights.tolist()
+    epochStatus["layer3"] = model.layer3.weights.tolist()
+    epochStatus["loss"] = modelLoss
+
+    status["losses"].append(modelLoss)
+
+    if len(status["epochs"]) > 100:
+        status["epochs"] = []
+    status["epochs"].append(epochStatus)
+
+    save_json(epoch // 100)
 
 
 def plot_loss_epoch(loss):
@@ -108,12 +159,14 @@ def loss_function(index):
 get_loss = np.vectorize(loss_function)
 
 def training_loop():
+
+    model.init_weights(WEIGHTS_PARAMETER)
     
     lossEpoch = []
-    for e in range(25):
+    for e in range(EPOCH_COUNT):
 
         # stochastic gradient descent
-        randPoints = np.random.choice(np.arange(x_train.shape[0]), 10)
+        randPoints = np.random.choice(np.arange(x_train.shape[0]), BATCH_SIZE)
         # for rxy in randPoints:
         #     # print(x_train[rxy])
         #     model.grad(x_train[rxy], y_train_data[rxy])
@@ -131,19 +184,7 @@ def training_loop():
         print("Epoch {}, Loss: {}".format(e, modelLoss))
         lossEpoch.append(modelLoss)
 
-        # add epoch information to file
-        epochStatus = {}
-        epochStatus["layer1"] = model.layer1.weights.tolist()
-        epochStatus["layer2"] = model.layer2.weights.tolist()
-        epochStatus["layer3"] = model.layer3.weights.tolist()
-        epochStatus["loss"] = modelLoss
-
-        status["epoch{}".format(e)] = epochStatus
-        status["losses"] = lossEpoch
-
-        with open("data/image.json", "w") as f:
-            json_obj = json.dumps(status, indent=4)
-            f.write(json_obj)
+        save_status(modelLoss, e)
     
     plot_loss_epoch(lossEpoch)
 
@@ -157,6 +198,7 @@ def testing_loop():
     print("Got {}".format(y_hat))
 
 if __name__ == "__main__":
+    save_parameters()
     training_loop()
 
     testing_loop()
