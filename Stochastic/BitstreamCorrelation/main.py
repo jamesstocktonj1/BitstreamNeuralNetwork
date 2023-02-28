@@ -43,6 +43,11 @@ def compare_correlation(bitstreamMatrix):
 
     return corMatrix
 
+def best_seeds(correlationMatrix, seed):
+    bestSeeds = np.argsort((correlationMatrix[seed] - 0.5) ** 2)
+    return bestSeeds[np.where(bestSeeds != seed)]
+
+
 def plot_seed_correlation(correlationMatrix, seed):
     fig = plt.figure()
 
@@ -104,6 +109,10 @@ def main():
     plot_correlation_matrix(correlationMatrix)
     plot_seed_correlation(correlationMatrix, 84)
     plot_seed_correlation_square(correlationMatrix, 84)
+
+    bestSeeds = best_seeds(correlationMatrix, 84)
+    print("Best Seeds for {}: {}".format(84, bestSeeds[:10]))
+    print("Correlation Value: {}".format((correlationMatrix[84][bestSeeds[:10]] - 0.5) ** 2))
 
 
 if __name__ == "__main__":
