@@ -9,10 +9,10 @@ from NeuralLayer import NeuralLayer
 
 # PARAMETERS
 LEARNING_RATE = 1.25
-NORMALISATION = 0.007
+NORMALISATION = 0.00007
 EPOCH_COUNT = 2500
-BATCH_SIZE = 250
-WEIGHTS_PARAMETER = 0.15
+BATCH_SIZE = 2
+WEIGHTS_PARAMETER = 0.25
 
 
 mnist = tf.keras.datasets.mnist
@@ -98,6 +98,8 @@ status = {
     "epochs": []
 }
 
+modelInfo = {}
+
 def save_json(name):
     with open("data/image_{}.json".format(name), "w") as f:
         json_obj = json.dumps(status, indent=4)
@@ -106,7 +108,6 @@ def save_json(name):
 
 def save_parameters():
     
-    modelInfo = {}
     modelInfo["name"] = "Image Classification"
     modelInfo["learning_rate"] = LEARNING_RATE
     modelInfo["normalisation_rate"] = NORMALISATION
@@ -135,6 +136,10 @@ def save_status(modelLoss, epoch):
     status["epochs"].append(epochStatus)
 
     save_json(epoch // 100)
+
+    # update losses in info file
+    modelInfo["losses"] = modelLoss
+    save_json("info")
 
 
 def plot_loss_epoch(loss):
@@ -178,11 +183,14 @@ def training_loop():
         # for rxy in range(x_train.shape[0]):
         #     modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
 
+        # modelLoss = get_loss(randPoints).sum()
         modelLoss = get_loss(np.arange(x_train.shape[0])).sum()
         modelLoss = modelLoss / x_train.shape[0]
 
         print("Epoch {}, Loss: {}".format(e, modelLoss))
         lossEpoch.append(modelLoss)
+
+        testing_loop()
 
         save_status(modelLoss, e)
     
@@ -191,8 +199,8 @@ def training_loop():
 
 def testing_loop():
 
-    y_hat = model.call(x_test[0])
-    y = y_test_data[0]
+    y_hat = model.call(x_train[0])
+    y = y_train_data[0]
 
     print("Exp {}".format(y))
     print("Got {}".format(y_hat))
