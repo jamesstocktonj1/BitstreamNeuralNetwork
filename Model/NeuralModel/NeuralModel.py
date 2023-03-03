@@ -387,3 +387,115 @@ class Perceptron:
 
     def call(self, x):
         return self.layer.call(x)
+
+
+
+
+class TestModel:
+
+    def __init__(self, R):
+        self.training_rate = R
+
+        self.layer1 = NeuralLayer(3, 3)
+        self.layer2 = NeuralLayer(3, 2)
+
+        self.layer1.init_weights(0.1)
+        self.layer2.init_weights(0.1)
+
+        self.layer1.no_activation = True
+        self.layer2.no_activation = True
+
+    def grad(self, x, y):
+        z = self.layer1.call(x)
+        y_hat = self.layer2.call(z)
+        
+        dLoss = self.layer2.grad_loss(y_hat, y)
+        dLayer2 = self.layer2.grad_layer(z, y_hat)
+        dWeight2 = self.layer2.grad_weight(z)
+
+        dWeight1 = self.layer1.grad_weight(x)
+
+        print(dLoss.shape)
+        print(dLayer2.shape)
+        print((dLoss @ dLayer2).shape)
+
+        dW2 = dLoss.T * dWeight2
+        dW1 = (dLoss @ dLayer2) * dWeight1
+
+        self.layer1.weights -= self.training_rate * dW1
+        self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
+        self.layer2.weights -= self.training_rate * dW2
+        self.layer2.weights = np.clip(self.layer2.weights, 0.0, 1.0)
+
+        return dW2, dW1
+    
+    def loss(self, x, y):
+        y_hat = self.call(x)
+
+        return (y - y_hat) ** 2
+
+    def call(self, x):
+        z = self.layer1.call(x)
+        return self.layer2.call(z)
+
+
+def model_test():
+    model = TestModel(0.25)
+
+    x = np.random.randint(0, 10, size=3) / 10
+    y_hat = np.random.randint(0, 10, size=2) / 10
+    w1 = np.random.randint(0, 10, size=(3, 3)) / 10
+    w2 = np.random.randint(0, 10, size=(2, 3)) / 10
+
+    model.layer1.weights = w1
+    model.layer2.weights = w2
+
+    dw1 = np.zeros((3, 3))
+    dw2 = np.zeros((2, 3))
+
+    # call between layers
+    z = np.zeros((3))
+    z[0] = 1 - (1 - (x[0] * w1[0,0])) * (1 - (x[1] * w1[0,1])) * (1 - (x[2] * w1[0,2]))
+    z[1] = 1 - (1 - (x[0] * w1[1,0])) * (1 - (x[1] * w1[1,1])) * (1 - (x[2] * w1[1,2]))
+    z[2] = 1 - (1 - (x[0] * w1[2,0])) * (1 - (x[1] * w1[2,1])) * (1 - (x[2] * w1[2,2]))
+
+    y = np.zeros((2))
+    y[0] = 1 - ((1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2])))
+    y[1] = 1 - ((1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))
+
+    # layer 1 values
+    dw1[0,0] = x[0] * (1 - (x[1] * w1[0,1])) * (1 - (x[2] * w1[0,2])) * -2 * ((w2[0,0] * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2]))) + (w2[1,0] * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))) * (y_hat - y).sum()
+    dw1[0,1] = x[1] * (1 - (x[0] * w1[0,0])) * (1 - (x[2] * w1[0,2])) * -2 * ((w2[0,1] * (1 - (z[0] * w2[0,0])) * (1 - (z[2] * w2[0,2]))) + (w2[1,1] * (1 - (z[0] * w2[1,0])) * (1 - (z[2] * w2[1,2])))) * (y_hat - y).sum()
+    dw1[0,2] = x[2] * (1 - (x[0] * w1[0,0])) * (1 - (x[1] * w1[0,1])) * -2 * ((w2[0,2] * (1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1]))) + (w2[1,2] * (1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])))) * (y_hat - y).sum()
+    dw1[1,0] = x[0] * (1 - (x[1] * w1[1,1])) * (1 - (x[2] * w1[1,2])) * -2 * ((w2[0,0] * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2]))) + (w2[1,0] * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))) * (y_hat - y).sum()
+    dw1[1,1] = x[1] * (1 - (x[0] * w1[1,0])) * (1 - (x[2] * w1[1,2])) * -2 * ((w2[0,1] * (1 - (z[0] * w2[0,0])) * (1 - (z[2] * w2[0,2]))) + (w2[1,1] * (1 - (z[0] * w2[1,0])) * (1 - (z[2] * w2[1,2])))) * (y_hat - y).sum()
+    dw1[1,2] = x[2] * (1 - (x[0] * w1[1,0])) * (1 - (x[1] * w1[1,1])) * -2 * ((w2[0,2] * (1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1]))) + (w2[1,2] * (1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])))) * (y_hat - y).sum()
+    dw1[2,0] = x[0] * (1 - (x[1] * w1[2,1])) * (1 - (x[2] * w1[2,2])) * -2 * ((w2[0,0] * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2]))) + (w2[1,0] * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))) * (y_hat - y).sum()
+    dw1[2,1] = x[1] * (1 - (x[0] * w1[2,0])) * (1 - (x[2] * w1[2,2])) * -2 * ((w2[0,1] * (1 - (z[0] * w2[0,0])) * (1 - (z[2] * w2[0,2]))) + (w2[1,1] * (1 - (z[0] * w2[1,0])) * (1 - (z[2] * w2[1,2])))) * (y_hat - y).sum()
+    dw1[2,2] = x[2] * (1 - (x[0] * w1[2,0])) * (1 - (x[1] * w1[2,1])) * -2 * ((w2[0,2] * (1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1]))) + (w2[1,2] * (1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])))) * (y_hat - y).sum()
+
+
+
+    # layer 2 values
+    dw2[0,0] = -2 * z[0] * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2])) * (y_hat[0] - 1 + (1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2])))
+    dw2[0,1] = -2 * z[1] * (1 - (z[1] * w2[0,0])) * (1 - (z[2] * w2[0,2])) * (y_hat[0] - 1 + (1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2])))
+    dw2[0,2] = -2 * z[2] * (1 - (z[1] * w2[0,0])) * (1 - (z[2] * w2[0,1])) * (y_hat[0] - 1 + (1 - (z[0] * w2[0,0])) * (1 - (z[1] * w2[0,1])) * (1 - (z[2] * w2[0,2])))
+    dw2[1,0] = -2 * z[0] * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])) * (y_hat[1] - 1 + (1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))
+    dw2[1,1] = -2 * z[1] * (1 - (z[1] * w2[1,0])) * (1 - (z[2] * w2[1,2])) * (y_hat[1] - 1 + (1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))
+    dw2[1,2] = -2 * z[2] * (1 - (z[1] * w2[1,0])) * (1 - (z[2] * w2[1,1])) * (y_hat[1] - 1 + (1 - (z[0] * w2[1,0])) * (1 - (z[1] * w2[1,1])) * (1 - (z[2] * w2[1,2])))
+
+    dw2_hat, dw1_hat = model.grad(x, y_hat)
+
+    print("\n\nLayer 1 Gradient")
+    print("Expected: {}".format(dw1))
+    print("Got:      {}".format(dw1_hat))
+
+    print("\n\nLayer 2 Gradient")
+    print("Expected: {}".format(dw2))
+    print("Got:      {}".format(dw2_hat))
+
+
+
+
+if __name__ == "__main__":
+    model_test()
