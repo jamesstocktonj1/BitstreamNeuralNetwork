@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import json
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -8,10 +9,10 @@ from NeuralLayer import NeuralLayer
 
 
 # PARAMETERS
-LEARNING_RATE = 0.125
-NORMALISATION = 0.000007
-EPOCH_COUNT = 2500
-BATCH_SIZE = 45
+LEARNING_RATE = 0.75
+NORMALISATION = 0
+EPOCH_COUNT = 500
+BATCH_SIZE = 80
 WEIGHTS_PARAMETER = 0.25
 
 
@@ -64,8 +65,8 @@ class IrisModel:
         dWeight1 = self.layer1.grad_weight(x)
 
         dW3 = dLoss.T * dWeight3
-        dW2 = (dLoss @ dLayer3).T * dWeight2
-        dW1 = ((dLoss @ dLayer3) @ dLayer2).T * dWeight1
+        dW2 = np.dot(dLoss, dLayer3).T * dWeight2
+        dW1 = np.dot(np.dot(dLoss, dLayer3), dLayer2).T * dWeight1
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
@@ -93,6 +94,86 @@ class IrisModel:
 model = IrisModel(LEARNING_RATE, NORMALISATION)
 
 
+modelInfo = {
+    "epoch": []
+}
+
+modelStatus = {
+    "epoch": [],
+    "train_loss": [],
+    "testing_loss": []
+}
+
+
+def save_json(name, data):
+    with open("data/iris_{}.json".format(name), "w") as f:
+        json_obj = json.dumps(data, indent=4)
+        f.write(json_obj)
+
+def save_parameters():
+    
+    modelInfo["name"] = "Image Classification"
+    modelInfo["learning_rate"] = LEARNING_RATE
+    modelInfo["normalisation_rate"] = NORMALISATION
+    modelInfo["epoch_count"] = EPOCH_COUNT
+    modelInfo["batch_size"] = BATCH_SIZE
+    modelInfo["xavier_parameter"] = WEIGHTS_PARAMETER
+
+    modelStatus["info"] = modelInfo
+
+    save_json("info", modelInfo)
+
+def save_status(trainLoss, testLoss, trainCorrect, testCorrect, epoch):
+
+    epochStatus = {}
+    epochStatus["info"] = "Epoch {}".format(epoch)
+    epochStatus["training_loss"] = trainLoss
+    epochStatus["training_correct"] = trainCorrect
+    epochStatus["testing_loss"] = testLoss
+    epochStatus["testing_correct"] = testCorrect
+
+    modelInfo["epoch"].append(epochStatus)
+
+
+    epochStatus["layer1"] = model.layer1.weights.tolist()
+    epochStatus["layer2"] = model.layer2.weights.tolist()
+    epochStatus["layer3"] = model.layer3.weights.tolist()
+
+    if len(modelStatus["epoch"]) > 99:
+        modelStatus["epoch"] = []
+
+    modelStatus["epoch"].append(epochStatus)
+    modelStatus["train_loss"].append(trainLoss)
+    modelStatus["testing_loss"].append(testLoss)
+
+    save_json("info", modelInfo)
+    save_json(epoch // 100, modelStatus)
+
+
+
+def plot_model_progress(trainLoss, testLoss, trainCorrect, testCorrect):
+    plt.figure()
+
+    fig1 = plt.subplot(4, 1, 1)
+    fig2 = plt.subplot(4, 1, 2)
+    fig3 = plt.subplot(4, 1, 3)
+    fig4 = plt.subplot(4, 1, 4)
+
+    fig1.plot(np.arange(len(trainLoss)), trainLoss)
+    fig2.plot(np.arange(len(testLoss)), testLoss)
+    fig3.plot(np.arange(len(trainCorrect)), trainCorrect)
+    fig4.plot(np.arange(len(testCorrect)), testCorrect)
+
+    fig1.set_ylabel("Training Loss")
+    fig2.set_ylabel("Testing Loss")
+    fig3.set_ylabel("Correct Train Points (%)")
+    fig4.set_ylabel("Correct Test Points (%)")
+    fig4.set_xlabel("Epochs")
+
+    plt.savefig("images/iris_epochs.png")
+    plt.close()
+
+
 def testing_loop():
     modelLoss = 0
     correctCount = 0
@@ -106,13 +187,17 @@ def testing_loop():
 
     modelLoss = modelLoss.sum() / x_test.shape[0]
 
-    print("Testing Loss: {}".format(modelLoss))
-    print("Correct Values: {}/{}".format(correctCount, x_test.shape[0]))
+    print("Testing Loss: {}\tCorrect Values: {}/{}".format(modelLoss, correctCount, x_test.shape[0]))
+
+    return modelLoss, (correctCount / x_test.shape[0]) * 100
 
 
 def training_loop():
 
-    lossEpoch = []
+    trainLoss = []
+    testLoss = []
+    trainEpoch = []
+    testEpoch = []
 
     for e in range(EPOCH_COUNT):
 
@@ -121,18 +206,34 @@ def training_loop():
             model.grad(x_train[rxy], y_train[rxy])
 
         modelLoss = 0
+        correctCount = 0
         for rxy in range(x_train.shape[0]):
             modelLoss += model.loss(x_train[rxy], y_train[rxy])
+
+            y_hat = model.call(x_train[rxy])
+            if y_hat.argmax() == y_train[rxy].argmax():
+                correctCount += 1
+                
         
         modelLoss = modelLoss.sum() / x_train.shape[0]
-        lossEpoch.append(modelLoss)
 
-        print("\nEpoch {}, Loss: {}".format(e, modelLoss))
-        testing_loop()
+        print("\nEpoch {}:".format(e))
+        print("Training Loss: {}\tCorrect Values: {}/{}".format(modelLoss, correctCount, x_train.shape[0]))
+        testingLoss, correctPoints = testing_loop()
 
+        save_status(modelLoss, testingLoss, (correctCount / x_train.shape[0]) * 100, correctPoints, e)
+
+        trainLoss.append(modelLoss)
+        testLoss.append(testingLoss)
+        trainEpoch.append((correctCount / x_train.shape[0]) * 100)
+        testEpoch.append(correctPoints)
+
+
+    plot_model_progress(trainLoss, testLoss, trainEpoch, testEpoch)
 
 
 
 
 if __name__ == "__main__":
+    save_parameters()
     training_loop()
