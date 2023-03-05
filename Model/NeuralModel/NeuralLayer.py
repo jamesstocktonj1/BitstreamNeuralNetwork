@@ -144,9 +144,9 @@ def neuron_layer_test():
 
 
     y = layer.call(a)
-    exp_y = np.zeros((2))
-    exp_y[0] = 1 - ((1 -(w[0,0] * a[0])) * (1 - (w[0,1] * a[1])))
-    exp_y[1] = 1 - ((1 -(w[1,0] * a[0])) * (1 - (w[1,1] * a[1])))
+    exp_y = np.zeros((1,2))
+    exp_y[0,0] = 1 - ((1 -(w[0,0] * a[0])) * (1 - (w[0,1] * a[1])))
+    exp_y[0,1] = 1 - ((1 -(w[1,0] * a[0])) * (1 - (w[1,1] * a[1])))
 
     print("\nTesting Call...")
     print("Expected: ", exp_y)
@@ -167,11 +167,11 @@ def neuron_layer_complex_test():
     z = layer.call(x)
 
     # test loss grad
-    exp_loss_grad = np.zeros((2))
+    exp_loss_grad = np.zeros((1, 2))
     loss_grad = layer.grad_loss(z, y)
 
-    exp_loss_grad[0] = -2 * (y[0] - z[0])
-    exp_loss_grad[1] = -2 * (y[1] - z[1])
+    exp_loss_grad[0,0] = -2 * (y[0] - z[0])
+    exp_loss_grad[0,1] = -2 * (y[1] - z[1])
 
     print("\nTesting Grad Loss...")
     print("Expected: ", exp_loss_grad)
