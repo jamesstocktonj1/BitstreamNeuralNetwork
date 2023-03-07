@@ -3,17 +3,18 @@ import matplotlib.pyplot as plt
 import json
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
 
 from NeuralLayer import NeuralLayer
 
 
 
 # PARAMETERS
-LEARNING_RATE = 0.75
+LEARNING_RATE = 0.0375
 NORMALISATION = 0
 EPOCH_COUNT = 500
 BATCH_SIZE = 80
-WEIGHTS_PARAMETER = 0.25
+WEIGHTS_PARAMETER = 0.15
 
 
 iris_data = load_iris()
@@ -40,13 +41,18 @@ class IrisModel:
         self.training_rate = R
         self.regularisation = L
 
-        self.layer1 = NeuralLayer(4, 8)
-        self.layer2 = NeuralLayer(8, 6)
-        self.layer3 = NeuralLayer(6, 3)
+        self.crossentropy = True
+
+        self.layer1 = NeuralLayer(4, 10)
+        self.layer2 = NeuralLayer(10, 5)
+        self.layer3 = NeuralLayer(5, 3)
 
         self.layer1.init_xavier(WEIGHTS_PARAMETER)
         self.layer2.init_xavier(WEIGHTS_PARAMETER)
         self.layer3.init_xavier(WEIGHTS_PARAMETER)
+
+        self.layer3.crossentropy = self.crossentropy
+        self.layer3.softmax = True
 
     def grad(self, x, y):
         z1 = self.layer1.call(x)
@@ -82,8 +88,11 @@ class IrisModel:
     
     def loss(self, x, y):
         y_hat = self.call(x)
-
-        return (y - y_hat) ** 2
+        
+        if not self.crossentropy:
+            return (y - y_hat) ** 2
+        else:
+            return -1 * (y * np.log(y_hat)).sum()
 
     def call(self, x):
         z = self.layer1.call(x)
@@ -149,6 +158,16 @@ def save_status(trainLoss, testLoss, trainCorrect, testCorrect, epoch):
     save_json("info", modelInfo)
     save_json(epoch // 100, modelStatus)
 
+def load_model(name):
+
+    with open(name, "r") as f:
+        modelData = json.load(f)
+    
+    print("Loading Model Info: {}".format(modelData["info"]))
+
+    model.layer1.weights = np.array(modelData["layer1"])
+    model.layer2.weights = np.array(modelData["layer2"])
+    model.layer3.weights = np.array(modelData["layer3"])
 
 
 def plot_model_progress(trainLoss, testLoss, trainCorrect, testCorrect):
@@ -173,6 +192,32 @@ def plot_model_progress(trainLoss, testLoss, trainCorrect, testCorrect):
     plt.savefig("images/iris_epochs.png")
     plt.close()
 
+def loss_stats():
+
+    testLoss = 0
+    testCorrect = 0
+    trainLoss = 0
+    trainCorrect = 0
+
+    for rxy in range(x_train.shape[0]):
+        trainLoss += model.loss(x_train[rxy], y_train[rxy])
+
+        y_hat = model.call(x_train[rxy])
+        if y_hat.argmax() == y_train[rxy].argmax():
+            trainCorrect += 1
+
+    for rxy in range(x_test.shape[0]):
+        testLoss += model.loss(x_test[rxy], y_test[rxy])
+
+        y_hat = model.call(x_test[rxy])
+        if y_hat.argmax() == y_test[rxy].argmax():
+            testCorrect += 1
+
+
+    print("Network Stats:")
+    print("Training Loss: {}\t Training Accuracy: {}".format(trainLoss / x_train.shape[0], (trainCorrect / x_train.shape[0]) * 100))
+    print("Testing Loss:  {}\t Testing Accuracy:  {}".format(testLoss / x_test.shape[0], (testCorrect / x_test.shape[0]) * 100))
+
 
 def testing_loop():
     modelLoss = 0
@@ -190,6 +235,49 @@ def testing_loop():
     print("Testing Loss: {}\tCorrect Values: {}/{}".format(modelLoss, correctCount, x_test.shape[0]))
 
     return modelLoss, (correctCount / x_test.shape[0]) * 100
+
+def test_confusion():
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    y_hat = np.zeros((x_test.shape[0]))
+
+    for rxy in range(x_test.shape[0]):
+        y_hat[rxy] = model.call(x_test[rxy]).argmax()
+
+    confMat = confusion_matrix(y_hat, y_test_index)
+
+    ax.matshow(confMat, cmap=plt.cm.Greens, alpha=0.3)
+    for i in range(confMat.shape[0]):
+        for j in range(confMat.shape[1]):
+            plt.text(x=j, y=i, s=confMat[i, j], va='center', ha='center')
+
+    plt.xlabel("True Prediction")
+    plt.ylabel("Model Prediction")
+
+    plt.savefig("images/iris_confusion.png")
+    plt.close()
+
+
+
+def predict_loop():
+
+    print("Training Points:")
+
+    for rxy in range(10):
+        y_hat = model.call(x_train[rxy])
+
+        print("Expected: {}".format(y_train[rxy]))
+        print("Got: {}\n".format(y_hat))
+
+
+    print("Testing Points")
+
+    for rxy in range(10):
+        y_hat = model.call(x_test[rxy])
+
+        print("Expected: {}".format(y_test[rxy]))
+        print("Got: {}\n".format(y_hat))
 
 
 def training_loop():
@@ -235,5 +323,14 @@ def training_loop():
 
 
 if __name__ == "__main__":
-    save_parameters()
-    training_loop()
+    load_model("data/decent_tbf/iris_point.json")
+
+    if True:
+        # predict_loop()
+        test_confusion()
+        loss_stats()
+    else:
+        save_parameters()
+        training_loop()
+        test_confusion()
+        loss_stats()
