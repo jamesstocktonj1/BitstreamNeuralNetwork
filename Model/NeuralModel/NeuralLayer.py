@@ -1,7 +1,11 @@
 import numpy as np
 
 
+def sigmoid(z):
+    return 1 / (1 + np.exp(-8 * (z - 0.5)))
 
+def softmax(z):
+    return np.exp(z) / np.exp(z).sum()
 
 
 class NeuralLayer:
@@ -12,6 +16,8 @@ class NeuralLayer:
         self.output_size = output_size
 
         self.no_activation = False
+        self.softmax = False
+        self.crossentropy = False
 
     def init_weights(self, u):
         self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
@@ -61,14 +67,18 @@ class NeuralLayer:
     def activation(self, z):
         if self.no_activation:
             return z
+        elif self.softmax:
+            return softmax(z)
         else:
-            return 1 / (1 + np.exp(-8 * (z - 0.5)))
+            return sigmoid(z)
 
     def activation_grad(self, z):
         if self.no_activation:
             return np.ones((z.size))
+        elif self.softmax:
+            return softmax(z) * (1 - softmax(z))
         else:
-            return self.activation(z) * (1 - self.activation(z))
+            return sigmoid(z) * (1 - sigmoid(z))
 
     def call(self, x):
         z = 1 - np.product(1 - (self.weights * x), axis=1)
