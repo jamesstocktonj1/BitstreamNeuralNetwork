@@ -7,6 +7,17 @@ def sigmoid(z):
 def softmax(z):
     return np.exp(z) / np.exp(z).sum()
 
+def relu(z):
+    y = np.zeros(z.shape[0])
+    y[np.where(0.5 < z)] = (1.2 * z[np.where(0.5 < z)]) - 0.6
+    y[np.where(0.75 < z)] = (2.8 * z[np.where(0.75 < z)]) - 1.8
+    return y
+
+def relu_grad(z):
+    dy = np.zeros(z.shape[0])
+    dy[np.where(0.5 < z)] = 1.2
+    dy[np.where(0.75 < z)] = 2.8
+    return dy
 
 class NeuralLayer:
 
@@ -18,6 +29,7 @@ class NeuralLayer:
         self.no_activation = False
         self.softmax = False
         self.crossentropy = False
+        self.relu = False
 
     def init_weights(self, u):
         self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
@@ -67,6 +79,8 @@ class NeuralLayer:
     def activation(self, z):
         if self.no_activation:
             return z
+        elif self.relu:
+            return relu(z)
         elif self.softmax:
             return softmax(z)
         else:
@@ -75,6 +89,8 @@ class NeuralLayer:
     def activation_grad(self, z):
         if self.no_activation:
             return np.ones((z.size))
+        elif self.relu:
+            return relu_grad(z)
         elif self.softmax:
             return softmax(z) * (1 - softmax(z))
         else:
