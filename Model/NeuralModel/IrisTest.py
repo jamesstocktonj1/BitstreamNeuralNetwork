@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
 from NeuralLayer import NeuralLayer
+from IrisModel import IrisModel, IrisModel2
 
 
 
@@ -13,14 +14,15 @@ from NeuralLayer import NeuralLayer
 LEARNING_RATE = 0.0375
 NORMALISATION = 0
 EPOCH_COUNT = 500
-BATCH_SIZE = 80
-WEIGHTS_PARAMETER = 0.15
+BATCH_SIZE = 120
+WEIGHTS_PARAMETER = 0.7
 
 
 iris_data = load_iris()
 
 x_data = iris_data.data
 x_data = x_data/np.max(x_data, axis=0)
+x_data = np.hstack((np.ones((x_data.shape[0], 1)), x_data))
 y_data = iris_data.target.reshape(-1, 1)
 
 x_train, x_test, y_train_index, y_test_index = train_test_split(x_data, y_data, test_size=0.2)
@@ -35,72 +37,7 @@ for i, target in enumerate(y_test_index):
     y_test[i][target] = 1
 
 
-class IrisModel:
-
-    def __init__(self, R, L):
-        self.training_rate = R
-        self.regularisation = L
-
-        self.crossentropy = True
-
-        self.layer1 = NeuralLayer(4, 10)
-        self.layer2 = NeuralLayer(10, 5)
-        self.layer3 = NeuralLayer(5, 3)
-
-        self.layer1.init_xavier(WEIGHTS_PARAMETER)
-        self.layer2.init_xavier(WEIGHTS_PARAMETER)
-        self.layer3.init_xavier(WEIGHTS_PARAMETER)
-
-        self.layer3.crossentropy = self.crossentropy
-        self.layer3.softmax = True
-
-    def grad(self, x, y):
-        z1 = self.layer1.call(x)
-        z2 = self.layer2.call(z1)
-        y_hat = self.layer3.call(z2)
-
-        dLoss = self.layer3.grad_loss(y_hat, y)
-        dLayer3 = self.layer3.grad_layer(z2, y_hat)
-        dWeight3 = self.layer3.grad_weight(z2)
-
-        dLayer2 = self.layer2.grad_layer(z1, z2)
-        dWeight2 = self.layer2.grad_weight(z1)
-
-        dWeight1 = self.layer1.grad_weight(x)
-
-        dWeight1 = self.layer1.grad_weight(x)
-
-        dW3 = dLoss.T * dWeight3
-        dW2 = np.dot(dLoss, dLayer3).T * dWeight2
-        dW1 = np.dot(np.dot(dLoss, dLayer3), dLayer2).T * dWeight1
-
-        self.layer1.weights -= self.training_rate * dW1
-        self.layer1.weights -= self.regularisation * self.layer1.weights
-        self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
-        self.layer2.weights -= self.training_rate * dW2
-        self.layer2.weights -= self.regularisation * self.layer2.weights
-        self.layer2.weights = np.clip(self.layer2.weights, 0.0, 1.0)
-        self.layer3.weights -= self.training_rate * dW3
-        self.layer3.weights -= self.regularisation * self.layer3.weights
-        self.layer3.weights = np.clip(self.layer3.weights, 0.0, 1.0)
-
-        return dW3, dW2, dW1
-    
-    def loss(self, x, y):
-        y_hat = self.call(x)
-        
-        if not self.crossentropy:
-            return (y - y_hat) ** 2
-        else:
-            return -1 * (y * np.log(y_hat)).sum()
-
-    def call(self, x):
-        z = self.layer1.call(x)
-        z = self.layer2.call(z)
-        return self.layer3.call(z)
-
-
-model = IrisModel(LEARNING_RATE, NORMALISATION)
+model = IrisModel(LEARNING_RATE, NORMALISATION, WEIGHTS_PARAMETER)
 
 
 modelInfo = {
@@ -215,8 +152,8 @@ def loss_stats():
 
 
     print("Network Stats:")
-    print("Training Loss: {}\t Training Accuracy: {}".format(trainLoss / x_train.shape[0], (trainCorrect / x_train.shape[0]) * 100))
-    print("Testing Loss:  {}\t Testing Accuracy:  {}".format(testLoss / x_test.shape[0], (testCorrect / x_test.shape[0]) * 100))
+    print("Training Loss: {}\t Training Accuracy: {}".format(trainLoss.sum() / x_train.shape[0], (trainCorrect / x_train.shape[0]) * 100))
+    print("Testing Loss:  {}\t Testing Accuracy:  {}".format(testLoss.sum() / x_test.shape[0], (testCorrect / x_test.shape[0]) * 100))
 
 
 def testing_loop():
@@ -323,7 +260,7 @@ def training_loop():
 
 
 if __name__ == "__main__":
-    load_model("data/decent_tbf/iris_point.json")
+    load_model("data/relu_continue_3.json")
 
     if True:
         # predict_loop()
