@@ -316,11 +316,12 @@ class SimpleModelRegular:
         self.training_rate = R
         self.regularisation = L
 
-        self.layer1 = NeuralLayer(2, 3)
+        self.layer1 = NeuralLayer(3, 3)
         self.layer2 = NeuralLayer(3, 1)
 
-        # self.layer1.no_activation = True
-        # self.layer2.no_activation = True
+        self.layer1.relu = True
+        self.layer2.relu = True
+        self.layer2.crossentropy = True
 
         self.layer1.init_weights(0.1)
         self.layer2.init_weights(0.1)
@@ -337,6 +338,86 @@ class SimpleModelRegular:
 
         dW2 = dLoss * dWeight2
         dW1 = (dLoss @ dLayer2).T * dWeight1
+
+        self.layer1.weights -= self.training_rate * dW1
+        self.layer1.weights -= self.regularisation * self.layer1.weights
+        self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
+        self.layer2.weights -= self.training_rate * dW2
+        self.layer2.weights -= self.regularisation * self.layer2.weights
+        self.layer2.weights = np.clip(self.layer2.weights, 0.0, 1.0)
+
+        return dW2, dW1
+    
+    def loss(self, x, y):
+        y_hat = self.call(x)
+
+        return (y - y_hat) ** 2
+
+    def call(self, x):
+        z = self.layer1.call(x)
+        return self.layer2.call(z)
+
+class Perceptron:
+
+    def __init__(self, R, L):
+        self.training_rate = R
+        self.regularisation = L
+
+        self.layer = NeuralLayer(2, 1)
+        self.layer.init_weights(0.1)
+
+    def grad(self, x, y):
+        y_hat = self.layer.call(x)
+
+        dLoss = self.layer.grad_loss(y_hat, y)
+        dLayer = self.layer.grad_layer(x, y_hat)
+        dWeight = self.layer.grad_weight(x)
+
+        dW = dLoss * dWeight
+
+        self.layer.weights -= self.training_rate * dW
+        self.layer.weights -= self.regularisation * self.layer.weights
+        self.layer.weights = np.clip(self.layer.weights, 0.0, 1.0)
+
+        return dW
+
+    def loss(self, x, y):
+        y_hat = self.call(x)
+
+        return (y - y_hat) ** 2
+
+    def call(self, x):
+        return self.layer.call(x)
+
+
+class SimpleModelRelu:
+
+    def __init__(self, R, L):
+        self.training_rate = R
+        self.regularisation = L
+
+        self.layer1 = NeuralLayer(3, 3)
+        self.layer2 = NeuralLayer(3, 1)
+
+        self.layer1.relu = True
+        self.layer2.relu = True
+        self.layer2.crossentropy = True
+
+        self.layer1.init_weights(0.2)
+        self.layer2.init_weights(0.2)
+
+    def grad(self, x, y):
+        z = self.layer1.call(x)
+        y_hat = self.layer2.call(z)
+        
+        dLoss = self.layer2.grad_loss(y_hat, y)
+        dLayer2 = self.layer2.grad_layer(z, y_hat)
+        dWeight2 = self.layer2.grad_weight(z)
+
+        dWeight1 = self.layer1.grad_weight(x)
+
+        dW2 = dLoss.T * dWeight2
+        dW1 = np.dot(dLoss, dLayer2).T * dWeight1
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
