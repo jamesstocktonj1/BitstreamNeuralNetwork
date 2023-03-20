@@ -8,11 +8,12 @@ from NeuralLayer import NeuralLayer
 
 
 # PARAMETERS
-LEARNING_RATE = 1.25
-NORMALISATION = 0.00007
+LEARNING_RATE = 0.525
+NORMALISATION = 0.0001
 EPOCH_COUNT = 2500
 BATCH_SIZE = 2
 WEIGHTS_PARAMETER = 0.25
+LOSS_RANGE = 100
 
 
 mnist = tf.keras.datasets.mnist
@@ -44,9 +45,12 @@ class RegularisedModel:
         self.layer2 = NeuralLayer(128, 127)
         self.layer3 = NeuralLayer(127, 10)
 
+        self.layer1.relu = True
+        self.layer2.relu = True
+
     def init_weights(self, u):
-        self.layer1.init_xavier(u)
-        self.layer2.init_xavier(u)
+        self.layer1.init_weights(u)
+        self.layer2.init_weights(u)
         self.layer3.init_xavier(u)
 
     def grad(self, x, y):
@@ -64,9 +68,9 @@ class RegularisedModel:
         dWeight1 = self.layer1.grad_weight(x)
 
 
-        dW3 = dLoss * dWeight3
-        dW2 = (dLoss.T @ dLayer3).T * dWeight2
-        dW1 = ((dLoss.T @ dLayer3) @ dLayer2).T * dWeight1
+        dW3 = dLoss.T * dWeight3
+        dW2 = np.dot(dLoss, dLayer3).T * dWeight2
+        dW1 = np.dot(np.dot(dLoss, dLayer3), dLayer2).T * dWeight1
 
 
         self.layer1.weights -= self.training_rate * dW1
@@ -184,10 +188,10 @@ def training_loop():
         #     modelLoss += model.loss(x_train[rxy], y_train_data[rxy])
 
         # modelLoss = get_loss(randPoints).sum()
-        modelLoss = get_loss(np.arange(x_train.shape[0])).sum()
-        modelLoss = modelLoss / x_train.shape[0]
+        modelLoss = get_loss(LOSS_RANGE).sum()
+        modelLoss = modelLoss / LOSS_RANGE
 
-        print("Epoch {}, Loss: {}".format(e, modelLoss))
+        print("\nEpoch {}, Loss: {}".format(e, modelLoss))
         lossEpoch.append(modelLoss)
 
         testing_loop()
