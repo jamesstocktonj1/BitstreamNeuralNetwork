@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular, SimpleModelRegular
+from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular, SimpleModelRegular, SimpleModelRelu, BiasModelRelu
 
 
 X = 250
@@ -24,6 +24,7 @@ xb = np.dot(xb, A) + 2
 
 x = np.vstack([xa, xb])
 x = np.interp(x, (x.min(), x.max()), (0, 1))
+# x = np.hstack((np.ones((x.shape[0], 1)), x))
 y = np.hstack([np.zeros(X//2), np.ones(X//2)]).reshape(-1, 1)
 # y = np.hstack([np.ones(X//2), np.zeros(X//2)]).reshape(-1, 1)
 
@@ -76,7 +77,7 @@ def plot_3d_plane(model):
 
     for i in range(X):
         for j in range(X):
-            neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
+            neuronPlane[i,j] = model.call(np.array([1, x_t[i,j], y_t[i,j]]))
 
     surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
     # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, rstride=1, cstride=1, alpha=None, antialiased=True)
@@ -96,9 +97,9 @@ def plot_3d_plane_points(model, x_data, y_data):
     # neuronPlane = call_neuron(x_t, y_t, n)
     neuronPlane = np.zeros((X, X))
 
-    # for i in range(X):
-    #     for j in range(X):
-    #         neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
+    for i in range(X):
+        for j in range(X):
+            neuronPlane[i,j] = model.call(np.array([x_t[i,j], y_t[i,j]]))
 
     # surf = fig1.plot_surface(x_t, y_t, neuronPlane, cmap=cm.coolwarm, linewidth=0, antialiased=False)
     # fig.colorbar(surf)
@@ -140,11 +141,14 @@ def training_loop(x, y):
     # model = DeepModel(0.0125)
     # model = DeepDeepModel(0.00125)
     # model = HiddenModelRegular(0.25, 0.00007)
-    model = SimpleModelRegular(0.025, 0.00007)
+    # model = SimpleModelRelu(0.00125, 0.000007)
+    model = BiasModelRelu(0.00725, 0.00007)
 
     # print(model.layer1.weights)
     # print(model.layer2.weights)
     # model.init_weights()
+
+    np.random.seed(10000)
 
 
     print("Data: ")
@@ -157,7 +161,7 @@ def training_loop(x, y):
 
     correctEpoch = []
     lossEpoch = []
-    for e in range(25):
+    for e in range(250):
 
         # initial pass
         correct = np.zeros(y.shape)
@@ -179,7 +183,7 @@ def training_loop(x, y):
 
 
         # stochastic gradient descent
-        randPoints = np.random.choice(np.arange(x.shape[0]), int(X * 0.2))
+        randPoints = np.random.choice(np.arange(x.shape[0]), int(X * 0.4))
         for rxy in randPoints:
             grads = model.grad(x[rxy], y[rxy])
 
@@ -199,6 +203,10 @@ def training_loop(x, y):
 
         print("Epoch {}: {}/{}".format(e, correct.sum(), len(correct)))
         print("      {}".format(modelLoss / X))
+
+        if correct.sum() > 240:
+            print("Finished")
+            break
     
     # evaluate model
     correct = np.zeros(y.shape)
@@ -212,9 +220,6 @@ def training_loop(x, y):
     plot_confusion_matrix(y_hat > 0.5, y)
 
     print("Model Evaluation, Accuracy: {:.2f}%".format((np.sum(correct == 1) / len(correct)) * 100))
-
-    print(model.layer1.weights)
-    print(model.layer2.weights)
     
     plot_loss_epoch(correctEpoch, lossEpoch)
 
