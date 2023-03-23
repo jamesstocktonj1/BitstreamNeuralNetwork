@@ -5,16 +5,16 @@ from sklearn.datasets import load_diabetes, load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
-from NeuralLayer import NeuralLayer
+from NeuralLayer import NeuralLayer, NeuralLayerBias
 from IrisModel import IrisModel, IrisModel2
 
 
 
 # PARAMETERS
-LEARNING_RATE = 0.125
+LEARNING_RATE = 0.0125
 NORMALISATION = 0.0001
 EPOCH_COUNT = 150
-BATCH_SIZE = 5
+BATCH_SIZE = 0.6
 WEIGHTS_PARAMETER = 0.7
 CORRECT_THRESHOLD = 0.1
 
@@ -40,10 +40,10 @@ class DiabetesModel:
 
         self.crossentropy = False
 
-        self.layer1 = NeuralLayer(10, 10)
-        self.layer2 = NeuralLayer(10, 10)
-        self.layer3 = NeuralLayer(10, 5)
-        self.layer4 = NeuralLayer(5, 1)
+        self.layer1 = NeuralLayerBias(10, 12)
+        self.layer2 = NeuralLayerBias(12, 10)
+        self.layer3 = NeuralLayerBias(10, 5)
+        self.layer4 = NeuralLayerBias(5, 1)
 
         self.layer1.init_weights(U)
         self.layer2.init_weights(U)
@@ -55,7 +55,7 @@ class DiabetesModel:
         self.layer3.relu = True
 
         self.layer4.crossentropy = self.crossentropy
-        # self.layer4.no_activation = True
+        self.layer4.no_activation = True
 
     def grad(self, x, y):
         z1 = self.layer1.call(x)
@@ -66,25 +66,34 @@ class DiabetesModel:
         dLoss = self.layer4.grad_loss(y_hat, y)
         dLayer4 = self.layer4.grad_layer(z3, y_hat)
         dWeight4 = self.layer4.grad_weight(z3)
+        dBias4 = self.layer4.grad_bias(z3)
 
         dLayer3 = self.layer3.grad_layer(z2, z3)
         dWeight3 = self.layer3.grad_weight(z2)
+        dBias3 = self.layer3.grad_bias(z2)
 
         dLayer2 = self.layer2.grad_layer(z1, z2)
         dWeight2 = self.layer2.grad_weight(z1)
+        dBias2 = self.layer2.grad_bias(z1)
 
         dWeight1 = self.layer1.grad_weight(x)
+        dBias1 = self.layer1.grad_bias(x)
 
         dW4 = dLoss.T * dWeight4
         dW3 = np.dot(dLoss, dLayer4).T * dWeight3
         dW2 = np.dot(np.dot(dLoss, dLayer4), dLayer3).T * dWeight2
         dW1 = np.dot(np.dot(np.dot(dLoss, dLayer4), dLayer3), dLayer2).T * dWeight1
 
+        dB4 = dLoss.T * dBias4
+        dB3 = np.dot(dLoss, dLayer4).T * dBias3
+        dB2 = np.dot(np.dot(dLoss, dLayer4), dLayer3).T * dBias2
+        dB1 = np.dot(np.dot(np.dot(dLoss, dLayer4), dLayer3), dLayer2).T * dBias1
+
         self.layer1.weights -= self.training_rate * dW1
-        # self.layer1.weights -= self.regularisation * self.layer1.weights
+        self.layer1.weights -= self.regularisation * self.layer1.weights
         self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
         self.layer2.weights -= self.training_rate * dW2
-        # self.layer2.weights -= self.regularisation * self.layer2.weights
+        self.layer2.weights -= self.regularisation * self.layer2.weights
         self.layer2.weights = np.clip(self.layer2.weights, 0.0, 1.0)
         self.layer3.weights -= self.training_rate * dW3
         self.layer3.weights -= self.regularisation * self.layer3.weights
@@ -92,6 +101,19 @@ class DiabetesModel:
         self.layer4.weights -= self.training_rate * dW4
         self.layer4.weights -= self.regularisation * self.layer4.weights
         self.layer4.weights = np.clip(self.layer4.weights, 0.0, 1.0)
+
+        self.layer4.bias -= self.training_rate * dB4
+        self.layer4.bias -= self.regularisation * self.layer4.bias
+        self.layer4.bias = np.clip(self.layer4.bias, 0.0, 1.0)
+        self.layer3.bias -= self.training_rate * dB3
+        self.layer3.bias -= self.regularisation * self.layer3.bias
+        self.layer3.bias = np.clip(self.layer3.bias, 0.0, 1.0)
+        self.layer2.bias -= self.training_rate * dB2
+        self.layer2.bias -= self.regularisation * self.layer2.bias
+        self.layer2.bias = np.clip(self.layer2.bias, 0.0, 1.0)
+        self.layer1.bias -= self.training_rate * dB1
+        self.layer1.bias -= self.regularisation * self.layer1.bias
+        self.layer1.bias = np.clip(self.layer1.bias, 0.0, 1.0)
 
         return dW4, dW3, dW2, dW1
     
@@ -201,7 +223,7 @@ class BigDiabetesModel:
         return self.layer5.call(z)
 
 
-model = BigDiabetesModel(LEARNING_RATE, NORMALISATION, WEIGHTS_PARAMETER)
+model = DiabetesModel(LEARNING_RATE, NORMALISATION, WEIGHTS_PARAMETER)
 
 
 modelInfo = {
@@ -249,7 +271,7 @@ def save_status(trainLoss, testLoss, trainCorrect, testCorrect, epoch):
     epochStatus["layer2"] = model.layer2.weights.tolist()
     epochStatus["layer3"] = model.layer3.weights.tolist()
     epochStatus["layer4"] = model.layer4.weights.tolist()
-    epochStatus["layer5"] = model.layer5.weights.tolist()
+    # epochStatus["layer5"] = model.layer5.weights.tolist()
 
     if len(modelStatus["epoch"]) > 99:
         modelStatus["epoch"] = []
@@ -303,8 +325,8 @@ def plot_spread(y, y_hat):
     fig1 = plt.subplot(1, 2, 1)
     fig2 = plt.subplot(1, 2, 2)
 
-    fig1.hist(y)
-    fig2.hist(y_hat)
+    fig1.hist(y, bins=20)
+    fig2.hist(y_hat, bins=20)
 
     fig1.title.set_text("Data Distribution")
     fig2.title.set_text("Prediction Distribution")
@@ -418,8 +440,8 @@ def training_loop():
         postLoss = 0
 
         # randPoints = np.random.choice(np.where(correctArr == 1)[0], BATCH_SIZE)
-        # randPoints = np.random.choice(np.arange(x_train.shape[0]), BATCH_SIZE)
-        randPoints = np.arange(x_train.shape[0])
+        randPoints = np.random.choice(np.arange(x_train.shape[0]), int(BATCH_SIZE * x_train.shape[0]))
+        # randPoints = np.arange(x_train.shape[0])
         for rxy in randPoints:
             preLoss += model.loss(x_train[rxy], y_train[rxy])
 
@@ -449,7 +471,7 @@ def training_loop():
         testingLoss, correctPoints = testing_loop()
 
         save_status(modelLoss, testingLoss, (correctCount / x_train.shape[0]) * 100, correctPoints, e)
-        print("Pre Loss: {}\tPost Loss: {}".format(preLoss / BATCH_SIZE, postLoss / BATCH_SIZE))
+        print("Pre Loss: {}\tPost Loss: {}".format(preLoss / int(BATCH_SIZE * x_train.shape[0]), postLoss / int(BATCH_SIZE * x_train.shape[0])))
 
         trainLoss.append(modelLoss)
         testLoss.append(testingLoss)
