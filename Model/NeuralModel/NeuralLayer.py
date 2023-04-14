@@ -101,7 +101,94 @@ class NeuralLayer:
         return self.activation(z)
 
 
+class NeuralLayerBias:
 
+    def __init__(self, input_size, output_size):
+        self.weights = np.zeros((output_size, input_size))
+        self.bias = np.zeros((output_size, 1))
+        self.input_size = input_size
+        self.output_size = output_size
+
+        self.no_activation = False
+        self.softmax = False
+        self.crossentropy = False
+        self.relu = False
+
+    def init_weights(self, u):
+        self.weights = 0.5 + u * np.random.randn(self.output_size, self.input_size)
+        self.bias = 0.5 + u * np.random.randn(self.output_size, 1)
+
+    def init_xavier(self, u):
+        std = u * np.sqrt(2 / (self.input_size + self.output_size))
+        self.weights = np.abs(std * np.random.randn(self.output_size, self.input_size))
+        self.bias = np.abs(std * np.random.randn(self.output_size, 1))
+
+    def grad_loss(self, z, y):
+        L = y - z
+
+        return (-2 * L).reshape((1,-1))
+
+    def grad_layer(self, x, z):
+        
+        def else_function(a):
+            def everything_else(b):
+                return np.product(a[np.where(a != b)])
+
+            f = np.vectorize(everything_else)
+            return f(a)
+
+        c = np.apply_along_axis(else_function, 1, 1 - (self.weights * x))
+        c = c * (1 - self.bias)
+
+        z = self.activation_grad(z)
+        z = z.reshape(z.size, 1)
+
+        return self.weights * c * z
+
+    def grad_weight(self, x):
+
+        def else_function(a):
+            def everything_else(b):
+                return np.product(a[np.where(a != b)])
+
+            f = np.vectorize(everything_else)
+            return f(a)
+
+        c = np.apply_along_axis(else_function, 1, 1 - (self.weights * x))
+        c = c * (1 - self.bias)
+
+        z = 1 - np.product(1 - (self.weights * x), axis=1)
+        z = self.activation_grad(z)
+        z = z.reshape(z.size, 1)
+
+        return x * c * z
+
+    def grad_bias(self, x):
+        return np.product(1 - (self.weights * x), axis=1).reshape((-1, 1))
+
+    def activation(self, z):
+        if self.no_activation:
+            return z
+        elif self.relu:
+            return relu(z)
+        elif self.softmax:
+            return softmax(z)
+        else:
+            return sigmoid(z)
+
+    def activation_grad(self, z):
+        if self.no_activation:
+            return np.ones((z.size))
+        elif self.relu:
+            return relu_grad(z)
+        elif self.softmax:
+            return softmax(z) * (1 - softmax(z))
+        else:
+            return sigmoid(z) * (1 - sigmoid(z))
+
+    def call(self, x):
+        z = np.product(np.hstack((1 - self.bias, 1 - (self.weights * x))), axis=1)
+        return self.activation(1-z)
 
 
 

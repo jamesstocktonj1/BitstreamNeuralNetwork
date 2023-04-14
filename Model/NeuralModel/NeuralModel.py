@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from NeuralLayer import NeuralLayer
+from NeuralLayer import NeuralLayer, NeuralLayerBias
 
 
 
@@ -436,6 +436,68 @@ class SimpleModelRelu:
     def call(self, x):
         z = self.layer1.call(x)
         return self.layer2.call(z)
+
+
+class BiasModelRelu:
+
+    def __init__(self, R, L):
+        self.training_rate = R
+        self.regularisation = L
+
+        self.layer1 = NeuralLayerBias(2, 3)
+        self.layer2 = NeuralLayerBias(3, 1)
+
+        self.layer1.no_activation = True
+        self.layer2.no_activation = True
+        self.layer2.crossentropy = True
+
+        self.layer1.init_weights(0.2)
+        self.layer2.init_weights(0.2)
+
+    def grad(self, x, y):
+        z = self.layer1.call(x)
+        y_hat = self.layer2.call(z)
+        
+        dLoss = self.layer2.grad_loss(y_hat, y)
+        dLayer2 = self.layer2.grad_layer(z, y_hat)
+        dWeight2 = self.layer2.grad_weight(z)
+        dBias2 = self.layer2.grad_bias(z)
+
+        dWeight1 = self.layer1.grad_weight(x)
+        dBias1 = self.layer1.grad_bias(x)
+        
+        dW2 = dLoss.T * dWeight2
+        dW1 = np.dot(dLoss, dLayer2).T * dWeight1
+
+        dB2 = dLoss.T * dBias2
+        dB1 = np.dot(dLoss, dLayer2).T * dBias1
+
+        self.layer1.weights -= self.training_rate * dW1
+        self.layer1.weights -= self.regularisation * self.layer1.weights
+        self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
+        self.layer2.weights -= self.training_rate * dW2
+        self.layer2.weights -= self.regularisation * self.layer2.weights
+        self.layer2.weights = np.clip(self.layer2.weights, 0.0, 1.0)
+
+        self.layer2.bias -= self.training_rate * dB2
+        self.layer2.bias -= self.regularisation * self.layer2.bias
+        self.layer2.bias = np.clip(self.layer2.bias, 0.0, 1.0)
+        self.layer1.bias -= self.training_rate * dB1
+        self.layer1.bias -= self.regularisation * self.layer1.bias
+        self.layer1.bias = np.clip(self.layer1.bias, 0.0, 1.0)
+
+        return dW2, dW1
+    
+    def loss(self, x, y):
+        y_hat = self.call(x)
+
+        return (y - y_hat) ** 2
+
+    def call(self, x):
+        z = self.layer1.call(x)
+        return self.layer2.call(z)
+
+
 
 class Perceptron:
 
