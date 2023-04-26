@@ -1,5 +1,5 @@
 import numpy as np
-from NeuralLayer import NeuralLayer
+from NeuralLayer import NeuralLayer, NeuralLayerBias
 
 
 class IrisModel:
@@ -8,11 +8,11 @@ class IrisModel:
         self.training_rate = R
         self.regularisation = L
 
-        self.crossentropy = False
+        self.crossentropy = True
 
-        self.layer1 = NeuralLayer(5, 10)
-        self.layer2 = NeuralLayer(10, 5)
-        self.layer3 = NeuralLayer(5, 3)
+        self.layer1 = NeuralLayerBias(4, 5)
+        self.layer2 = NeuralLayerBias(5, 5)
+        self.layer3 = NeuralLayerBias(5, 3)
 
         self.layer1.init_weights(U)
         self.layer2.init_weights(U)
@@ -32,15 +32,22 @@ class IrisModel:
         dLoss = self.layer3.grad_loss(y_hat, y)
         dLayer3 = self.layer3.grad_layer(z2, y_hat)
         dWeight3 = self.layer3.grad_weight(z2)
+        dBias3 = self.layer3.grad_bias(z2)
 
         dLayer2 = self.layer2.grad_layer(z1, z2)
         dWeight2 = self.layer2.grad_weight(z1)
+        dBias2 = self.layer2.grad_bias(z1)
 
         dWeight1 = self.layer1.grad_weight(x)
+        dBias1 = self.layer1.grad_bias(x)
 
         dW3 = dLoss.T * dWeight3
         dW2 = np.dot(dLoss, dLayer3).T * dWeight2
         dW1 = np.dot(np.dot(dLoss, dLayer3), dLayer2).T * dWeight1
+
+        dB3 = dLoss.T * dBias3
+        dB2 = np.dot(dLoss, dLayer3).T * dBias2
+        dB1 = np.dot(np.dot(dLoss, dLayer3), dLayer2).T * dBias1
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights -= self.regularisation * self.layer1.weights
@@ -51,6 +58,16 @@ class IrisModel:
         self.layer3.weights -= self.training_rate * dW3
         self.layer3.weights -= self.regularisation * self.layer3.weights
         self.layer3.weights = np.clip(self.layer3.weights, 0.0, 1.0)
+
+        self.layer1.bias -= self.training_rate * dB1
+        self.layer1.bias -= self.regularisation * self.layer1.bias
+        self.layer1.bias = np.clip(self.layer1.bias, 0.0, 1.0)
+        self.layer2.bias -= self.training_rate * dB2
+        self.layer2.bias -= self.regularisation * self.layer2.bias
+        self.layer2.bias = np.clip(self.layer2.bias, 0.0, 1.0)
+        self.layer3.bias -= self.training_rate * dB3
+        self.layer3.bias -= self.regularisation * self.layer3.bias
+        self.layer3.bias = np.clip(self.layer3.bias, 0.0, 1.0)
 
         return dW3, dW2, dW1
     
