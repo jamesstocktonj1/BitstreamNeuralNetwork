@@ -204,6 +204,33 @@ def test_confusion():
     plt.savefig("images/iris_confusion.png")
     plt.close()
 
+def complete_confusion():
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    y_hat = np.zeros((x_data.shape[0]))
+    correct = 0
+
+    for rxy in range(x_data.shape[0]):
+        y_hat[rxy] = model.call(x_data[rxy]).argmax()
+        if y_hat[rxy] == y_data[rxy]:
+            correct += 1
+
+    confMat = confusion_matrix(y_hat, y_data)
+
+    ax.matshow(confMat, cmap=plt.cm.Greens, alpha=0.3)
+    for i in range(confMat.shape[0]):
+        for j in range(confMat.shape[1]):
+            plt.text(x=j, y=i, s=confMat[i, j], va='center', ha='center')
+
+    plt.xlabel("True Prediction")
+    plt.ylabel("Model Prediction")
+
+    print("Complete Accuracty: {}".format((correct / x_data.shape[0]) * 100))
+
+    plt.savefig("images/iris_complete_confusion.png")
+    plt.close()
+
 def train_confusion():
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -305,6 +332,7 @@ if __name__ == "__main__":
         test_confusion()
         train_confusion()
         loss_stats()
+        complete_confusion()
     else:
         save_parameters()
         training_loop()

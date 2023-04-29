@@ -1,3 +1,4 @@
+from queue import PriorityQueue
 import numpy as np
 from NeuralLayer import NeuralLayer, NeuralLayerBias
 
@@ -80,9 +81,14 @@ class IrisModel:
             return -1 * (y * np.log(y_hat)).sum()
 
     def call(self, x):
+        print("\n\nModel Call")
         z = self.layer1.call(x)
+        print("Layer 1: {}".format(z))
         z = self.layer2.call(z)
-        return self.layer3.call(z)
+        print("Layer 2: {}".format(z))
+        z = self.layer3.call(z)
+        print("Layer 3: {}".format(z))
+        return z
 
 
 class IrisModel2:

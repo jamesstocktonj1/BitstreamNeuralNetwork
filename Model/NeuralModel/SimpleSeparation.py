@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.metrics import confusion_matrix
 
-from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular, SimpleModelRegular, SimpleModelRelu, BiasModelRelu
-
+from NeuralModel import SimpleModel, HiddenModel, DeepModel, DeepDeepModel, HiddenModelRegular, SimpleModelRegular, SimpleModelRelu, BiasModelRelu, Perceptron
+import PerceptronData
 
 X = 250
 
@@ -27,6 +27,9 @@ x = np.interp(x, (x.min(), x.max()), (0, 1))
 # x = np.hstack((np.ones((x.shape[0], 1)), x))
 y = np.hstack([np.zeros(X//2), np.ones(X//2)]).reshape(-1, 1)
 # y = np.hstack([np.ones(X//2), np.zeros(X//2)]).reshape(-1, 1)
+
+# Load Perceptron Data
+x, y = PerceptronData.load_data()
 
 
 def plot_confusion_matrix(y1Data, y2Data):
@@ -62,6 +65,27 @@ def plot_decision(model):
 
     plt.savefig("images/simple_decision.png")
     plt.close()
+
+def plot_decision_boundary(model):
+    plt.figure()
+
+    boundary = np.zeros(250)
+    for i in range(250):
+        for j in range(250):
+            x_i = np.array([i/250, j/250])
+            y = model.call(x_i)
+
+            if (y > 0.5) or (j == 249):
+                boundary[i] = j/250
+                break
+    
+    plt.plot(x[:X//2, 0], x[:X//2, 1], 'ro')
+    plt.plot(x[X//2:, 0], x[X//2:, 1], 'bo')
+
+    plt.plot(np.arange(0, 1, 1/250), boundary)
+    plt.savefig("images/simple_boundary.png")
+    plt.close()
+
 
 def plot_3d_plane(model):
 
@@ -142,7 +166,8 @@ def training_loop(x, y):
     # model = DeepDeepModel(0.00125)
     # model = HiddenModelRegular(0.25, 0.00007)
     # model = SimpleModelRelu(0.00125, 0.000007)
-    model = BiasModelRelu(0.00725, 0.00007)
+    model = BiasModelRelu(0.000025, 0.0000007)
+    # model = Perceptron(0.000125, 0.000007)
 
     # print(model.layer1.weights)
     # print(model.layer2.weights)
@@ -183,7 +208,8 @@ def training_loop(x, y):
 
 
         # stochastic gradient descent
-        randPoints = np.random.choice(np.arange(x.shape[0]), int(X * 0.4))
+        # randPoints = np.random.choice(np.arange(x.shape[0]), int(X * 1))
+        randPoints = np.where(correct < 1)[0]
         for rxy in randPoints:
             grads = model.grad(x[rxy], y[rxy])
 
@@ -204,7 +230,7 @@ def training_loop(x, y):
         print("Epoch {}: {}/{}".format(e, correct.sum(), len(correct)))
         print("      {}".format(modelLoss / X))
 
-        if correct.sum() > 240:
+        if correct.sum() > 248:
             print("Finished")
             break
     
@@ -224,9 +250,15 @@ def training_loop(x, y):
     plot_loss_epoch(correctEpoch, lossEpoch)
 
     plot_decision(model)
+    plot_decision_boundary(model)
     # plot_grad_epoch(gradEpoch)
     # plot_3d_plane(model)
     plot_3d_plane_points(model, x, y_hat)
+
+    print(model.layer1.bias)
+    print(model.layer1.weights)
+    print(model.layer2.bias)
+    print(model.layer2.weights)
 
 
 

@@ -11,8 +11,8 @@ class SimpleModel:
     def __init__(self, R):
         self.training_rate = R
 
-        self.layer1 = NeuralLayer(2, 4)
-        self.layer2 = NeuralLayer(4, 1)
+        self.layer1 = NeuralLayer(2, 2)
+        self.layer2 = NeuralLayer(2, 1)
 
         self.layer1.init_weights(0.1)
         self.layer2.init_weights(0.1)
@@ -25,16 +25,10 @@ class SimpleModel:
         dLayer2 = self.layer2.grad_layer(z, y_hat)
         dWeight2 = self.layer2.grad_weight(z)
 
-        # print("Loss ", dLoss)
-        # print("Layer ", dLayer2)
-        # print("Weight: ", dWeight2)
-
         dWeight1 = self.layer1.grad_weight(x)
 
-        # print("Weight: ", dWeight1)
-
-        dW2 = dLoss * dWeight2
-        dW1 = np.dot(dLoss * dLayer2, dWeight1)
+        dW2 = dLoss.T * dWeight2
+        dW1 = np.dot(dLoss, dLayer2).T * dWeight1
 
         self.layer1.weights -= self.training_rate * dW1
         self.layer1.weights = np.clip(self.layer1.weights, 0.0, 1.0)
@@ -444,15 +438,14 @@ class BiasModelRelu:
         self.training_rate = R
         self.regularisation = L
 
-        self.layer1 = NeuralLayerBias(2, 3)
-        self.layer2 = NeuralLayerBias(3, 1)
+        self.layer1 = NeuralLayerBias(2, 4)
+        self.layer2 = NeuralLayerBias(4, 1)
 
-        self.layer1.no_activation = True
-        self.layer2.no_activation = True
-        self.layer2.crossentropy = True
+        self.layer1.relu = True
+        self.layer2.relu = True
 
-        self.layer1.init_weights(0.2)
-        self.layer2.init_weights(0.2)
+        self.layer1.init_weights(0.4)
+        self.layer2.init_weights(0.4)
 
     def grad(self, x, y):
         z = self.layer1.call(x)
@@ -505,8 +498,11 @@ class Perceptron:
         self.training_rate = R
         self.regularisation = L
 
-        self.layer = NeuralLayer(2, 1)
+        self.layer = NeuralLayerBias(2, 1)
         self.layer.init_weights(0.1)
+
+        self.layer.relu = True
+        self.layer.crossentropy = True
 
     def grad(self, x, y):
         y_hat = self.layer.call(x)
@@ -514,8 +510,14 @@ class Perceptron:
         dLoss = self.layer.grad_loss(y_hat, y)
         dLayer = self.layer.grad_layer(x, y_hat)
         dWeight = self.layer.grad_weight(x)
+        dBias = self.layer.grad_bias(x)
 
-        dW = dLoss * dWeight
+        dW = dLoss.T * dWeight
+        dB = dLoss.T * dBias
+
+        self.layer.bias -= self.training_rate * dB
+        self.layer.bias -= self.regularisation * self.layer.bias
+        self.layer.bias = np.clip(self.layer.bias, 0.0, 1.0)
 
         self.layer.weights -= self.training_rate * dW
         self.layer.weights -= self.regularisation * self.layer.weights
