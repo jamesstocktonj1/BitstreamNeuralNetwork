@@ -1,0 +1,5 @@
+Loading Model Info: Epoch 229
+Network Stats:
+Training Loss: 1.005464005293626         Training Accuracy: 95.83333333333334
+Testing Loss:  1.0479405992412159        Testing Accuracy:  96.66666666666667
+Complete Accuracty: 96.0

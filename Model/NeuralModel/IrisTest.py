@@ -11,18 +11,18 @@ from IrisModel import IrisModel, IrisModel2
 
 
 # PARAMETERS
-LEARNING_RATE = 0.0375
-NORMALISATION = 0
-EPOCH_COUNT = 500
+LEARNING_RATE = 0.00125
+NORMALISATION = 0.0000007
+EPOCH_COUNT = 250
 BATCH_SIZE = 120
-WEIGHTS_PARAMETER = 0.7
+WEIGHTS_PARAMETER = 0.4
 
 
 iris_data = load_iris()
 
 x_data = iris_data.data
 x_data = x_data/np.max(x_data, axis=0)
-x_data = np.hstack((np.ones((x_data.shape[0], 1)), x_data))
+# x_data = np.hstack((np.ones((x_data.shape[0], 1)), x_data))
 y_data = iris_data.target.reshape(-1, 1)
 
 x_train, x_test, y_train_index, y_test_index = train_test_split(x_data, y_data, test_size=0.2)
@@ -82,8 +82,11 @@ def save_status(trainLoss, testLoss, trainCorrect, testCorrect, epoch):
 
 
     epochStatus["layer1"] = model.layer1.weights.tolist()
+    epochStatus["layer1b"] = model.layer1.bias.tolist()
     epochStatus["layer2"] = model.layer2.weights.tolist()
+    epochStatus["layer2b"] = model.layer2.bias.tolist()
     epochStatus["layer3"] = model.layer3.weights.tolist()
+    epochStatus["layer3b"] = model.layer3.bias.tolist()
 
     if len(modelStatus["epoch"]) > 99:
         modelStatus["epoch"] = []
@@ -105,6 +108,10 @@ def load_model(name):
     model.layer1.weights = np.array(modelData["layer1"])
     model.layer2.weights = np.array(modelData["layer2"])
     model.layer3.weights = np.array(modelData["layer3"])
+
+    model.layer1.bias = np.array(modelData["layer1b"])
+    model.layer2.bias = np.array(modelData["layer2b"])
+    model.layer3.bias = np.array(modelData["layer3b"])
 
 
 def plot_model_progress(trainLoss, testLoss, trainCorrect, testCorrect):
@@ -142,6 +149,8 @@ def loss_stats():
         y_hat = model.call(x_train[rxy])
         if y_hat.argmax() == y_train[rxy].argmax():
             trainCorrect += 1
+
+        print(y_hat)
 
     for rxy in range(x_test.shape[0]):
         testLoss += model.loss(x_test[rxy], y_test[rxy])
@@ -195,6 +204,55 @@ def test_confusion():
     plt.savefig("images/iris_confusion.png")
     plt.close()
 
+def complete_confusion():
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    y_hat = np.zeros((x_data.shape[0]))
+    correct = 0
+
+    for rxy in range(x_data.shape[0]):
+        y_hat[rxy] = model.call(x_data[rxy]).argmax()
+        if y_hat[rxy] == y_data[rxy]:
+            correct += 1
+
+    confMat = confusion_matrix(y_hat, y_data)
+
+    ax.matshow(confMat, cmap=plt.cm.Greens, alpha=0.3)
+    for i in range(confMat.shape[0]):
+        for j in range(confMat.shape[1]):
+            plt.text(x=j, y=i, s=confMat[i, j], va='center', ha='center')
+
+    plt.xlabel("True Prediction")
+    plt.ylabel("Model Prediction")
+
+    print("Complete Accuracty: {}".format((correct / x_data.shape[0]) * 100))
+
+    plt.savefig("images/iris_complete_confusion.png")
+    plt.close()
+
+def train_confusion():
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    y_hat = np.zeros((x_train.shape[0]))
+
+    for rxy in range(x_train.shape[0]):
+        y_hat[rxy] = model.call(x_train[rxy]).argmax()
+
+    confMat = confusion_matrix(y_hat, y_train_index)
+
+    ax.matshow(confMat, cmap=plt.cm.Greens, alpha=0.3)
+    for i in range(confMat.shape[0]):
+        for j in range(confMat.shape[1]):
+            plt.text(x=j, y=i, s=confMat[i, j], va='center', ha='center')
+
+    plt.xlabel("True Prediction")
+    plt.ylabel("Model Prediction")
+
+    plt.savefig("images/iris_train_confusion.png")
+    plt.close()
+
 
 
 def predict_loop():
@@ -226,8 +284,15 @@ def training_loop():
 
     for e in range(EPOCH_COUNT):
 
-        randPoints = np.random.choice(np.arange(x_train.shape[0]), BATCH_SIZE)
-        for rxy in randPoints:
+        correct = np.zeros(x_train.shape[0])
+        for rxy in range(x_train.shape[0]):
+            y_hat = model.call(x_train[rxy])
+
+            if y_hat.argmax() == y_train[rxy].argmax():
+                correct[rxy] = 1
+
+        randPoints = np.random.choice(correct, BATCH_SIZE)
+        for rxy in np.where(correct < 1)[0]:
             model.grad(x_train[rxy], y_train[rxy])
 
         modelLoss = 0
@@ -260,12 +325,14 @@ def training_loop():
 
 
 if __name__ == "__main__":
-    load_model("data/relu_continue_3.json")
+    load_model("data/bias_model/best/best.json")
 
     if True:
         # predict_loop()
         test_confusion()
+        train_confusion()
         loss_stats()
+        complete_confusion()
     else:
         save_parameters()
         training_loop()

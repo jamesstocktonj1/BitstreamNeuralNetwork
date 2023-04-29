@@ -123,6 +123,10 @@ class NeuralLayerBias:
         self.weights = np.abs(std * np.random.randn(self.output_size, self.input_size))
         self.bias = np.abs(std * np.random.randn(self.output_size, 1))
 
+    def init_uniform(self, u):
+        self.weights = np.random.rand(self.output_size, self.input_size) * u
+        self.bias = np.random.rand(self.output_size, 1) * u
+
     def grad_loss(self, z, y):
         L = y - z
 

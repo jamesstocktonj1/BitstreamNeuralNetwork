@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json, sys
-from sklearn.datasets import load_diabetes, load_iris
+from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
@@ -11,7 +11,7 @@ from IrisModel import IrisModel, IrisModel2
 
 
 # PARAMETERS
-LEARNING_RATE = 0.0125
+LEARNING_RATE = 0.00125
 NORMALISATION = 0.0001
 EPOCH_COUNT = 150
 BATCH_SIZE = 0.6
